@@ -430,10 +430,9 @@ class VisualEffectsSystem {
         // Verificação extra para contexto AR
         const scene = document.querySelector('a-scene');
         const isInAR = scene?.is('ar-mode') || scene?.is('vr-mode');
-        
+
         if (isInAR) {
             console.log('📱 Contexto AR detectado durante teste');
-            // Forçar visibilidade do canvas
             if (this.canvas) {
                 this.canvas.style.visibility = 'visible';
                 this.canvas.style.opacity = '1';
@@ -442,79 +441,63 @@ class VisualEffectsSystem {
                 console.log('✅ Canvas forçado a ser visível');
             }
         }
-        
-        // Feedback visual imediato e mais claro
-        console.log('🎨 Feedback visual: Teste iniciado');
-        if (this.canvas && this.ctx) {
-            // Flash branco mais duradouro e texto de feedback
-            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-            this.ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
-            
-            // Texto de feedback visual
-            this.ctx.fillStyle = '#000000';
-            this.ctx.font = 'bold 24px Arial';
-            this.ctx.textAlign = 'center';
-            this.ctx.fillText('TESTE INICIADO!', window.innerWidth/2, window.innerHeight/2);
-            
-            setTimeout(() => {
-                this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-            }, 500);
-        }
-        
+
         // Limpar efeitos anteriores
         this.clearAllEffects();
-        
-        // Teste visual básico: desenhar retângulos coloridos grandes
-        console.log('🟫 Desenhando indicadores visuais...');
-        
-        // Retângulo verde grande
-        this.ctx.fillStyle = '#00FF00';
-        this.ctx.fillRect(50, 50, 200, 100);
-        
-        // Retângulo vermelho
-        this.ctx.fillStyle = '#FF0000';
-        this.ctx.fillRect(window.innerWidth - 250, 50, 200, 100);
-        
-        // Retângulo azul no centro
-        this.ctx.fillStyle = '#0000FF';
-        this.ctx.fillRect(window.innerWidth/2 - 100, window.innerHeight/2 - 50, 200, 100);
-        
-        // Texto de teste
-        this.ctx.fillStyle = '#FFFFFF';
-        this.ctx.font = '20px Arial';
-        this.ctx.fillText('TESTE VISUAL ATIVO', window.innerWidth/2 - 80, window.innerHeight/2);
-        
-        console.log('🟫 Retângulos e texto desenhados');
-        
+
+        // Adiciona um efeito de desenho estático que será renderizado pelo loop 'animate'
+        const testDrawing = new StaticDrawingEffect((ctx) => {
+            // Flash branco para feedback
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+
+            // Retângulos coloridos
+            ctx.fillStyle = 'rgba(0, 255, 0, 0.7)';
+            ctx.fillRect(50, 50, 200, 100);
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.7)';
+            ctx.fillRect(window.innerWidth - 250, 50, 200, 100);
+            ctx.fillStyle = 'rgba(0, 0, 255, 0.7)';
+            ctx.fillRect(window.innerWidth / 2 - 100, window.innerHeight / 2 - 50, 200, 100);
+
+            // Texto de teste
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('TESTE VISUAL ATIVO', window.innerWidth / 2, window.innerHeight / 2);
+        });
+        this.effects.push(testDrawing);
+        console.log('🟫 Indicadores visuais adicionados como um efeito persistente.');
+
+
         // Teste 1: Celebração no centro
         setTimeout(() => {
             console.log('🎉 Iniciando celebração...');
             this.showCelebrationEffect(window.innerWidth / 2, window.innerHeight / 2, 'ghost_captured');
         }, 1000);
-        
+
         // Teste 2: Feixe de prótons por 3 segundos
         setTimeout(() => {
             console.log('⚡ Iniciando feixe de prótons...');
             this.startProtonBeamEffect();
-            
+
             setTimeout(() => {
                 console.log('⚡ Parando feixe de prótons...');
                 this.stopProtonBeamEffect();
             }, 3000);
         }, 2000);
-        
+
         // Teste 3: Sucção
         setTimeout(() => {
             console.log('🌪️ Iniciando sucção...');
             this.showSuctionEffect(
-                window.innerWidth / 4, 
+                window.innerWidth / 4,
                 window.innerHeight / 4,
-                (window.innerWidth * 3) / 4, 
+                (window.innerWidth * 3) / 4,
                 (window.innerHeight * 3) / 4
             );
         }, 6000);
-        
-        // Limpar retângulos de teste após 8 segundos
+
+        // Limpar todos os efeitos (incluindo o desenho de teste) após 8 segundos
         setTimeout(() => {
             console.log('🧹 Limpando teste visual...');
             this.clearAllEffects();
@@ -1032,6 +1015,23 @@ class FailureXEffect {
         ctx.stroke();
         
         ctx.restore();
+    }
+}
+
+// Efeito para desenhar elementos estáticos de teste
+class StaticDrawingEffect {
+    constructor(drawingFunction) {
+        this.drawingFunction = drawingFunction;
+        this.active = true;
+        this.type = 'static_test_drawing'; // Para fácil identificação
+    }
+
+    update() {
+        // Este efeito não muda com o tempo
+    }
+
+    render(ctx) {
+        this.drawingFunction(ctx);
     }
 }
 
