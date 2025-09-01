@@ -513,7 +513,7 @@ AFRAME.registerComponent('game-manager', {
         this.ghostCaptureSound.play(); // Som de captura bem-sucedida
         
         // NOVO: Efeitos visuais de celebração
-        if (window.visualEffectsSystem) {
+        if (window.visualEffectsSystem && window.visualEffectsSystem.isInitialized) {
             const protonRect = this.protonPackIcon.getBoundingClientRect();
             window.visualEffectsSystem.showCelebrationEffect(
                 protonRect.left + protonRect.width / 2,
@@ -528,7 +528,7 @@ AFRAME.registerComponent('game-manager', {
         }
         
         // NOVO: Notificação estilizada
-        if (window.notificationSystem) {
+        if (window.notificationSystem && window.notificationSystem.isInitialized) {
             window.notificationSystem.ghostCaptured(this.ghostData.type, this.ghostData.points);
         }
         

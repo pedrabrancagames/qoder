@@ -11,6 +11,7 @@ class VisualEffectsSystem {
         this.effects = [];
         this.animationId = null;
         this.isRunning = false;
+        this.isInitialized = false;
         
         // Configurações
         this.config = {
@@ -22,14 +23,33 @@ class VisualEffectsSystem {
             effectDuration: 3000
         };
         
-        this.init();
+        // Aguardar carregamento da página antes de inicializar
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.init());
+        } else {
+            // Se já carregou, aguardar um pouco para garantir que body existe
+            setTimeout(() => this.init(), 100);
+        }
     }
     
     init() {
-        this.createCanvas();
-        this.setupCanvas();
-        this.start();
-        console.log('🎨 Sistema de Efeitos Visuais inicializado');
+        if (!document.body) {
+            console.warn('⚠️ document.body não disponível, tentando novamente em 200ms...');
+            setTimeout(() => this.init(), 200);
+            return;
+        }
+        
+        try {
+            this.createCanvas();
+            this.setupCanvas();
+            this.start();
+            this.isInitialized = true;
+            console.log('🎨 Sistema de Efeitos Visuais inicializado com sucesso');
+        } catch (error) {
+            console.error('❌ Erro ao inicializar Sistema de Efeitos Visuais:', error);
+            // Tentar novamente em 500ms
+            setTimeout(() => this.init(), 500);
+        }
     }
     
     createCanvas() {
@@ -121,6 +141,11 @@ class VisualEffectsSystem {
     
     // Efeito de celebração ao capturar fantasma
     showCelebrationEffect(x, y, type = 'ghost_captured') {
+        if (!this.isInitialized) {
+            console.warn('⚠️ Sistema de efeitos não inicializado ainda');
+            return;
+        }
+        
         const colors = this.getCelebrationColors(type);
         const particleCount = type === 'ecto1_unlocked' ? 200 : this.config.celebrationParticles;
         
@@ -550,7 +575,15 @@ class FailureXEffect {
     }
 }
 
-// Inicializar sistema globalmente
-window.visualEffectsSystem = new VisualEffectsSystem();
+// Inicializar sistema globalmente quando a página estiver pronta
+if (typeof window !== 'undefined') {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            window.visualEffectsSystem = new VisualEffectsSystem();
+        });
+    } else {
+        window.visualEffectsSystem = new VisualEffectsSystem();
+    }
+}
 
 console.log('🎨 Sistema de Efeitos Visuais carregado com sucesso!');

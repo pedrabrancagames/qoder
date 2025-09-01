@@ -9,13 +9,33 @@ class NotificationSystem {
         this.container = null;
         this.maxNotifications = 5;
         this.defaultDuration = 4000;
-        this.init();
+        this.isInitialized = false;
+        
+        // Aguardar carregamento da página antes de inicializar
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.init());
+        } else {
+            // Se já carregou, aguardar um pouco para garantir que body existe
+            setTimeout(() => this.init(), 100);
+        }
     }
     
     init() {
-        this.createContainer();
-        this.injectStyles();
-        console.log('📢 Sistema de Notificações inicializado');
+        if (!document.body) {
+            console.warn('⚠️ document.body não disponível para notificações, tentando novamente...');
+            setTimeout(() => this.init(), 200);
+            return;
+        }
+        
+        try {
+            this.createContainer();
+            this.injectStyles();
+            this.isInitialized = true;
+            console.log('📢 Sistema de Notificações inicializado com sucesso');
+        } catch (error) {
+            console.error('❌ Erro ao inicializar Sistema de Notificações:', error);
+            setTimeout(() => this.init(), 500);
+        }
     }
     
     createContainer() {
@@ -223,6 +243,11 @@ class NotificationSystem {
     
     // Método principal para criar notificações
     show(message, type = 'info', options = {}) {
+        if (!this.isInitialized) {
+            console.warn('⚠️ Sistema de notificações não inicializado ainda');
+            return null;
+        }
+        
         const notification = this.createNotification(message, type, options);
         this.addNotification(notification);
         return notification;
@@ -501,7 +526,15 @@ window.showInfo = (message, duration = 4000) => {
     return window.notificationSystem.info(message, { duration });
 };
 
-// Inicializar sistema globalmente
-window.notificationSystem = new NotificationSystem();
+// Inicializar sistema globalmente quando a página estiver pronta
+if (typeof window !== 'undefined') {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            window.notificationSystem = new NotificationSystem();
+        });
+    } else {
+        window.notificationSystem = new NotificationSystem();
+    }
+}
 
 console.log('📢 Sistema de Notificações carregado com sucesso!');
