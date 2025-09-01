@@ -45,10 +45,10 @@ class VisualEffectsSystem {
             this.start();
             this.isInitialized = true;
             
-            // Limpeza automática a cada 5 segundos
+            // Limpeza automática mais freqüente
             setInterval(() => {
                 this.cleanupParticles();
-            }, 5000);
+            }, 3000); // A cada 3 segundos
             
             console.log('🎨 Sistema de Efeitos Visuais inicializado com sucesso');
         } catch (error) {
@@ -138,9 +138,9 @@ class VisualEffectsSystem {
         // Atualizar efeitos especiais
         this.updateEffects();
         
-        // Debug info apenas quando há muitas partículas
-        if (this.particles.length > 50 || this.effects.length > 2) {
-            console.log(`🎨 MUITAS PARTÍCULAS: ${this.particles.length} partículas, ${this.effects.length} efeitos`);
+        // Debug info apenas quando necessário (reduzido drasticamente)
+        if (this.particles.length > 80) {
+            console.log(`🎨 SOBRECARGA: ${this.particles.length} partículas ativas`);
         }
         
         this.animationId = requestAnimationFrame(() => this.animate());
@@ -148,14 +148,24 @@ class VisualEffectsSystem {
     
     updateParticles() {
         // Limpar partículas mortas de forma mais agressiva
+        const beforeCount = this.particles.length;
         this.particles = this.particles.filter(particle => {
             particle.update();
-            return particle.life > 0.01; // Threshold mais alto para remoção
+            // Remover partículas com vida baixa OU que saíram da tela
+            return particle.life > 0.05 && 
+                   particle.x > -50 && particle.x < window.innerWidth + 50 &&
+                   particle.y > -50 && particle.y < window.innerHeight + 50;
         });
         
         // Limitar número máximo de partículas para evitar travamento
         if (this.particles.length > this.config.maxParticles) {
             this.particles = this.particles.slice(-this.config.maxParticles); // Manter apenas as mais recentes
+        }
+        
+        // Log apenas quando há limpeza significativa
+        const removedCount = beforeCount - this.particles.length;
+        if (removedCount > 5) {
+            console.log(`🧹 Limpeza automática: ${removedCount} partículas removidas`);
         }
     }
     
@@ -284,17 +294,35 @@ class VisualEffectsSystem {
     // Limpar partículas mortas
     cleanupParticles() {
         const beforeCount = this.particles.length;
-        this.particles = this.particles.filter(particle => particle.life > 0.1);
-        const afterCount = this.particles.length;
         
-        if (beforeCount !== afterCount) {
-            console.log(`🧹 Limpeza: ${beforeCount - afterCount} partículas removidas (${afterCount} restantes)`);
+        // Limpeza mais agressiva
+        this.particles = this.particles.filter(particle => {
+            return particle.life > 0.2 && // Threshold mais alto
+                   particle.x > -100 && particle.x < window.innerWidth + 100 &&
+                   particle.y > -100 && particle.y < window.innerHeight + 100;
+        });
+        
+        const afterCount = this.particles.length;
+        const removedCount = beforeCount - afterCount;
+        
+        if (removedCount > 0) {
+            console.log(`🧹 Limpeza periódica: ${removedCount} partículas removidas (${afterCount} restantes)`);
         }
         
         // Forçar limpeza se ainda houver muitas partículas
         if (this.particles.length > this.config.maxParticles) {
-            this.particles = this.particles.slice(-this.config.maxParticles);
-            console.log(`🧹 Forçando limpeza: limitado a ${this.config.maxParticles} partículas`);
+            const excess = this.particles.length - this.config.maxParticles;
+            this.particles = this.particles.slice(excess); // Remove as mais antigas
+            console.log(`🧹 Forçando limpeza: ${excess} partículas antigas removidas`);
+        }
+        
+        // Limpar efeitos inativos
+        const beforeEffects = this.effects.length;
+        this.effects = this.effects.filter(effect => effect.active);
+        const removedEffects = beforeEffects - this.effects.length;
+        
+        if (removedEffects > 0) {
+            console.log(`🧹 ${removedEffects} efeitos inativos removidos`);
         }
     }
     
@@ -308,8 +336,7 @@ class VisualEffectsSystem {
     
     // Função de teste visual
     testVisualEffects() {
-        console.log('📝 TESTE VISUAL OTIMIZADO');
-        console.log('Sistema inicializado:', this.isInitialized);
+        console.log('📝 TESTE VISUAL OTIMIZADO - INICIANDO');
         
         if (!this.isInitialized) {
             console.error('❌ Sistema não inicializado!');
@@ -319,11 +346,18 @@ class VisualEffectsSystem {
         // Limpar efeitos anteriores
         this.clearAllEffects();
         
-        // Teste 1: Celebração pequena
-        this.showCelebrationEffect(window.innerWidth / 2, window.innerHeight / 2, 'ghost_captured');
-        console.log('🎉 Teste: Celebração ativada');
+        // Teste visual básico: desenhar retângulo verde
+        this.ctx.fillStyle = '#92F428';
+        this.ctx.fillRect(50, 50, 100, 100);
+        console.log('🟫 Retângulo verde de teste desenhado');
         
-        // Teste 2: Feixe por 2 segundos
+        // Teste 1: Celebração pequena
+        setTimeout(() => {
+            this.showCelebrationEffect(window.innerWidth / 2, window.innerHeight / 2, 'ghost_captured');
+            console.log('🎉 Teste: Celebração ativada');
+        }, 500);
+        
+        // Teste 2: Feixe por 3 segundos
         setTimeout(() => {
             this.startProtonBeamEffect();
             console.log('⚡ Teste: Feixe ativado');
@@ -331,8 +365,8 @@ class VisualEffectsSystem {
             setTimeout(() => {
                 this.stopProtonBeamEffect();
                 console.log('⚡ Teste: Feixe parado');
-            }, 2000);
-        }, 1000);
+            }, 3000);
+        }, 1500);
         
         // Teste 3: Sucção pequena
         setTimeout(() => {
@@ -343,7 +377,7 @@ class VisualEffectsSystem {
                 window.innerHeight / 2 + 50
             );
             console.log('🌪️ Teste: Sucção ativada');
-        }, 3000);
+        }, 5000);
     }
     
     getCelebrationColors(type) {
@@ -774,58 +808,38 @@ class ProtonBeamEffect {
 // Partícula do feixe de prótons
 class ProtonParticle extends Particle {
     constructor() {
-        // Posicão inicial: perto da proton pack (canto inferior direito)
-        const startX = window.innerWidth - 80 + (Math.random() - 0.5) * 40;
-        const startY = window.innerHeight - 80 + (Math.random() - 0.5) * 40;
+        // Posição inicial: perto da proton pack (canto inferior direito)
+        const startX = window.innerWidth - 100;
+        const startY = window.innerHeight - 100;
         
         super(startX, startY);
         
         // Direção para o centro da tela (onde está o fantasma)
-        const targetX = window.innerWidth / 2 + (Math.random() - 0.5) * 100;
-        const targetY = window.innerHeight / 2 + (Math.random() - 0.5) * 100;
+        const targetX = window.innerWidth / 2;
+        const targetY = window.innerHeight / 2;
         
         const dx = targetX - this.x;
         const dy = targetY - this.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         
-        const speed = 12 + Math.random() * 8; // Velocidade mais alta
+        const speed = 8; // Velocidade controlada
         this.vx = (dx / distance) * speed;
         this.vy = (dy / distance) * speed;
         
-        this.life = 0.6 + Math.random() * 0.6;
+        this.life = 1.0; // Vida simplificada
         this.maxLife = this.life;
-        this.size = 4 + Math.random() * 6; // Partículas maiores
-        this.color = ['#92F428', '#CDDC39', '#8BC34A', '#00FF00'][Math.floor(Math.random() * 4)];
-        this.glow = 15 + Math.random() * 15; // Mais brilho
-        this.trail = [];
+        this.size = 4; // Tamanho fixo
+        this.color = '#92F428'; // Cor fixa verde
+        this.glow = 10;
     }
     
     update() {
         super.update();
-        
-        // Adicionar rastro
-        this.trail.push({ x: this.x, y: this.y, alpha: this.alpha });
-        if (this.trail.length > 8) {
-            this.trail.shift();
-        }
+        this.life -= 0.02; // Diminui mais rápido
     }
     
     render(ctx) {
-        // Renderizar rastro
-        ctx.save();
-        this.trail.forEach((point, index) => {
-            const trailAlpha = (index / this.trail.length) * this.alpha * 0.3;
-            ctx.globalAlpha = trailAlpha;
-            ctx.fillStyle = this.color;
-            ctx.shadowColor = this.color;
-            ctx.shadowBlur = this.glow * 0.5;
-            ctx.beginPath();
-            ctx.arc(point.x, point.y, this.size * 0.5, 0, Math.PI * 2);
-            ctx.fill();
-        });
-        ctx.restore();
-        
-        // Renderizar partícula principal
+        // Renderizar partícula simples mas visível
         ctx.save();
         ctx.globalAlpha = this.alpha;
         ctx.fillStyle = this.color;
