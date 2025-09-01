@@ -46,13 +46,18 @@ jobs:
       - name: Create dist directory
         run: |
           mkdir -p dist
-          # Copiar todos os arquivos para dist
-          cp -r . dist/
-          # Remover diretórios desnecessários
-          rm -rf dist/.git dist/.github
+          # Copiar arquivos específicos evitando recursão
+          cp *.html dist/ 2>/dev/null || true
+          cp *.js dist/ 2>/dev/null || true
+          cp *.css dist/ 2>/dev/null || true
+          cp *.ico dist/ 2>/dev/null || true
+          cp *.md dist/ 2>/dev/null || true
+          cp -r assets dist/ 2>/dev/null || true
           # Verificar se index.html existe
           if [ ! -f "dist/index.html" ]; then
             echo "Erro: index.html não encontrado!"
+            echo "Arquivos na raiz:"
+            ls -la
             exit 1
           fi
           echo "Arquivos preparados para deploy:"
