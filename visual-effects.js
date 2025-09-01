@@ -424,7 +424,7 @@ class VisualEffectsSystem {
         }
         
         this._executeTest();
-    },
+    }
     
     _executeTest() {
         // Verificação extra para contexto AR
