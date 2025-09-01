@@ -36,11 +36,7 @@
         <a-light type="ambient" color="#FFF" intensity="0.7"></a-light>
         <a-light type="directional" color="#FFF" intensity="0.8" position="-1 2 1"></a-light>
         <a-camera fov="80">
-            <!-- Proton Beam Entity (child of camera) - cilindro controlado por JS -->
-            <a-entity id="proton-beam-entity" visible="false"
-                geometry="primitive: cylinder; radius: 0.012;"
-                material="color: #00FFFF; opacity: 0.8;">
-            </a-entity>
+            <!-- Proton Beam antigo removido - agora usando partículas -->
         </a-camera>
         <a-entity id="reticle" visible="false"
             geometry="primitive: ring; radius-inner: 0.04; radius-outer: 0.06;"

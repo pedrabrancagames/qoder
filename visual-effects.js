@@ -147,16 +147,26 @@ class VisualEffectsSystem {
         }
         
         const colors = this.getCelebrationColors(type);
-        const particleCount = type === 'ecto1_unlocked' ? 200 : this.config.celebrationParticles;
+        const particleCount = type === 'ecto1_unlocked' ? 300 : 200; // Mais partículas
         
         for (let i = 0; i < particleCount; i++) {
             const particle = new CelebrationParticle(x, y, colors);
             this.particles.push(particle);
         }
         
-        // Efeito de explosão circular
+        // Efeito de explosão circular mais intenso
         const explosion = new ExplosionEffect(x, y, colors, type);
         this.effects.push(explosion);
+        
+        // Adicionar partículas extras em círculo
+        for (let i = 0; i < 50; i++) {
+            const angle = (i / 50) * Math.PI * 2;
+            const radius = 30 + Math.random() * 70;
+            const px = x + Math.cos(angle) * radius;
+            const py = y + Math.sin(angle) * radius;
+            const particle = new CelebrationParticle(px, py, colors);
+            this.particles.push(particle);
+        }
         
         // Feedback tátil se disponível
         this.triggerHapticFeedback();
@@ -166,15 +176,25 @@ class VisualEffectsSystem {
     
     // Efeito de sucção do fantasma para a proton pack
     showSuctionEffect(fromX, fromY, toX, toY) {
-        // Partículas de sucção
-        for (let i = 0; i < this.config.suctionParticles; i++) {
+        // Partículas de sucção mais intensas
+        for (let i = 0; i < this.config.suctionParticles * 2; i++) { // Dobrar partículas
             const particle = new SuctionParticle(fromX, fromY, toX, toY);
             this.particles.push(particle);
         }
         
-        // Linha de conexão energética
+        // Linha de conexão energética mais intensa
         const connection = new EnergyConnection(fromX, fromY, toX, toY);
         this.effects.push(connection);
+        
+        // Adicionar partículas extras ao redor do ponto de origem
+        for (let i = 0; i < 30; i++) {
+            const angle = (i / 30) * Math.PI * 2;
+            const radius = 20 + Math.random() * 30;
+            const px = fromX + Math.cos(angle) * radius;
+            const py = fromY + Math.sin(angle) * radius;
+            const particle = new SuctionParticle(px, py, toX, toY);
+            this.particles.push(particle);
+        }
         
         console.log(`🌪️ Efeito de sucção de (${fromX}, ${fromY}) para (${toX}, ${toY})`);
     }
@@ -494,13 +514,17 @@ class ProtonBeamEffect {
         this.active = true;
         this.intensity = 1.0;
         this.particles = [];
+        this.particleTimer = 0;
     }
     
     update() {
-        // Adicionar partículas do feixe
-        for (let i = 0; i < 5; i++) {
-            const particle = new ProtonParticle();
-            this.particles.push(particle);
+        // Adicionar partículas do feixe mais frequentemente
+        this.particleTimer++;
+        if (this.particleTimer % 2 === 0) { // A cada 2 frames
+            for (let i = 0; i < 8; i++) { // Mais partículas
+                const particle = new ProtonParticle();
+                this.particles.push(particle);
+            }
         }
         
         // Atualizar partículas existentes
@@ -511,6 +535,24 @@ class ProtonBeamEffect {
     }
     
     render(ctx) {
+        // Renderizar linha central do feixe
+        ctx.save();
+        ctx.strokeStyle = '#92F428';
+        ctx.lineWidth = 4;
+        ctx.globalAlpha = 0.6;
+        ctx.shadowColor = '#92F428';
+        ctx.shadowBlur = 15;
+        
+        const centerX = window.innerWidth / 2;
+        const protonY = window.innerHeight - 100;
+        
+        ctx.beginPath();
+        ctx.moveTo(centerX + 50, protonY);
+        ctx.lineTo(centerX, centerY);
+        ctx.stroke();
+        ctx.restore();
+        
+        // Renderizar partículas
         this.particles.forEach(particle => {
             particle.render(ctx);
         });
@@ -520,16 +562,67 @@ class ProtonBeamEffect {
 // Partícula do feixe de prótons
 class ProtonParticle extends Particle {
     constructor() {
-        const centerX = window.innerWidth / 2;
-        const bottomY = window.innerHeight - 100;
+        // Posicão inicial: perto da proton pack (canto inferior direito)
+        const startX = window.innerWidth - 80 + (Math.random() - 0.5) * 40;
+        const startY = window.innerHeight - 80 + (Math.random() - 0.5) * 40;
         
-        super(centerX + (Math.random() - 0.5) * 20, bottomY);
-        this.vy = -5 - Math.random() * 3;
-        this.vx = (Math.random() - 0.5) * 2;
-        this.life = 0.5 + Math.random() * 0.5;
+        super(startX, startY);
+        
+        // Direção para o centro da tela (onde está o fantasma)
+        const targetX = window.innerWidth / 2 + (Math.random() - 0.5) * 100;
+        const targetY = window.innerHeight / 2 + (Math.random() - 0.5) * 100;
+        
+        const dx = targetX - this.x;
+        const dy = targetY - this.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        const speed = 12 + Math.random() * 8; // Velocidade mais alta
+        this.vx = (dx / distance) * speed;
+        this.vy = (dy / distance) * speed;
+        
+        this.life = 0.6 + Math.random() * 0.6;
         this.maxLife = this.life;
-        this.size = 2 + Math.random() * 3;
-        this.color = '#92F428';
+        this.size = 4 + Math.random() * 6; // Partículas maiores
+        this.color = ['#92F428', '#CDDC39', '#8BC34A', '#00FF00'][Math.floor(Math.random() * 4)];
+        this.glow = 15 + Math.random() * 15; // Mais brilho
+        this.trail = [];
+    }
+    
+    update() {
+        super.update();
+        
+        // Adicionar rastro
+        this.trail.push({ x: this.x, y: this.y, alpha: this.alpha });
+        if (this.trail.length > 8) {
+            this.trail.shift();
+        }
+    }
+    
+    render(ctx) {
+        // Renderizar rastro
+        ctx.save();
+        this.trail.forEach((point, index) => {
+            const trailAlpha = (index / this.trail.length) * this.alpha * 0.3;
+            ctx.globalAlpha = trailAlpha;
+            ctx.fillStyle = this.color;
+            ctx.shadowColor = this.color;
+            ctx.shadowBlur = this.glow * 0.5;
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, this.size * 0.5, 0, Math.PI * 2);
+            ctx.fill();
+        });
+        ctx.restore();
+        
+        // Renderizar partícula principal
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+        ctx.fillStyle = this.color;
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur = this.glow;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
     }
 }
 

@@ -418,7 +418,7 @@ AFRAME.registerComponent('game-manager', {
 
         this.isCapturing = true;
         this.protonBeamSound.play();
-        this.protonBeamEntity.setAttribute('visible', true); // Mostra o feixe de prótons
+        // REMOVIDO: Feixe antigo Three.js
         
         // NOVO: Efeitos visuais do feixe de prótons
         if (window.visualEffectsSystem) {
@@ -430,38 +430,24 @@ AFRAME.registerComponent('game-manager', {
             this.protonFireAnimation = window.animationManager.animateProtonPackFire(this.protonPackIcon);
         }
         
-        // NOVO: Efeito de sucção do fantasma
-        if (window.visualEffectsSystem && this.activeGhostEntity) {
-            const ghostRect = this.activeGhostEntity.getBoundingClientRect();
+        // NOVO: Efeito de sucção do fantasma (centro da tela para proton pack)
+        if (window.visualEffectsSystem) {
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
             const protonRect = this.protonPackIcon.getBoundingClientRect();
             
-            if (ghostRect && protonRect) {
-                window.visualEffectsSystem.showSuctionEffect(
-                    ghostRect.left + ghostRect.width / 2,
-                    ghostRect.top + ghostRect.height / 2,
-                    protonRect.left + protonRect.width / 2,
-                    protonRect.top + protonRect.height / 2
-                );
-            }
+            window.visualEffectsSystem.showSuctionEffect(
+                centerX, centerY, // Centro da tela (fantasma)
+                protonRect.left + protonRect.width / 2,
+                protonRect.top + protonRect.height / 2
+            );
         }
 
         // Define os pontos de início e fim do feixe em coordenadas relativas à câmera
-        const startPoint = new THREE.Vector3(0.15, -0.4, -0.5); // Ponta da pistola
-        const endPoint = new THREE.Vector3(0, 0, -10); // Centro da tela, 10m de distância
-
-        // Calcula o vetor do feixe, seu comprimento e ponto médio
-        const beamVector = new THREE.Vector3().subVectors(endPoint, startPoint);
-        const beamLength = beamVector.length();
-        const beamMidpoint = new THREE.Vector3().addVectors(startPoint, endPoint).divideScalar(2);
-
-        // Define a altura e posição do cilindro
-        this.protonBeamEntity.setAttribute('geometry', { height: beamLength });
-        this.protonBeamEntity.object3D.position.copy(beamMidpoint);
-
-        // Calcula a rotação para alinhar o cilindro (que por padrão aponta para cima) com o vetor do feixe
-        const cylinderUp = new THREE.Vector3(0, 1, 0); // Eixo Y padrão do cilindro
-        const quaternion = new THREE.Quaternion().setFromUnitVectors(cylinderUp, beamVector.normalize());
-        this.protonBeamEntity.object3D.quaternion.copy(quaternion);
+        // REMOVIDO: Código do feixe antigo Three.js - agora usando partículas
+        // const startPoint = new THREE.Vector3(0.15, -0.4, -0.5);
+        // const endPoint = new THREE.Vector3(0, 0, -10);
+        // Etc... (substituído por sistema de partículas)
 
         this.protonPackProgressBar.style.display = 'block';
         let startTime = Date.now();
@@ -483,7 +469,7 @@ AFRAME.registerComponent('game-manager', {
         this.isCapturing = false;
         this.protonBeamSound.pause();
         this.protonBeamSound.currentTime = 0;
-        this.protonBeamEntity.setAttribute('visible', false); // Esconde o feixe de prótons
+        // REMOVIDO: this.protonBeamEntity.setAttribute('visible', false); // Feixe antigo
         
         // NOVO: Parar efeitos visuais
         if (window.visualEffectsSystem) {
@@ -512,12 +498,12 @@ AFRAME.registerComponent('game-manager', {
         this.cancelCapture();
         this.ghostCaptureSound.play(); // Som de captura bem-sucedida
         
-        // NOVO: Efeitos visuais de celebração
+        // NOVO: Efeitos visuais de celebração (centro da tela)
         if (window.visualEffectsSystem && window.visualEffectsSystem.isInitialized) {
-            const protonRect = this.protonPackIcon.getBoundingClientRect();
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
             window.visualEffectsSystem.showCelebrationEffect(
-                protonRect.left + protonRect.width / 2,
-                protonRect.top + protonRect.height / 2,
+                centerX, centerY,
                 'ghost_captured'
             );
         }
