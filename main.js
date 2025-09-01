@@ -173,14 +173,23 @@ AFRAME.registerComponent('game-manager', {
             // Verificar se o botão é visível e clicável
             const rect = this.testEffectsButton.getBoundingClientRect();
             console.log('🔴 Posição do botão:', rect);
+            
+            // Se o botão tem tamanho zero, criar fallback
+            if (rect.width === 0 || rect.height === 0) {
+                console.error('❌ Botão tem tamanho zero! Criando fallback...');
+                setTimeout(() => {
+                    this.createTestButtonFallback();
+                }, 100);
+            }
+            
             console.log('🔴 Estilo do botão:', getComputedStyle(this.testEffectsButton));
         } else {
             console.error('❌ Botão de teste NÃO encontrado!');
             
-            // Criar botão manualmente como fallback
+            // Criar botão manualmente como fallback IMEDIATO
             setTimeout(() => {
                 this.createTestButtonFallback();
-            }, 2000);
+            }, 500); // Reduzido para 500ms
         }
     },
 
@@ -210,31 +219,69 @@ AFRAME.registerComponent('game-manager', {
     },
 
     createTestButtonFallback: function() {
-        console.log('🔴 Criando botão de teste manual');
+        console.log('🔴 Criando botão de teste manual ROBUSTO');
+        
+        // Remover botão fallback anterior se existir
+        const existing = document.getElementById('test-effects-fallback');
+        if (existing) {
+            existing.remove();
+        }
         
         const button = document.createElement('button');
         button.id = 'test-effects-fallback';
-        button.textContent = 'TESTE MANUAL';
+        button.textContent = 'TESTE VISUAL';
         button.style.cssText = `
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 12000;
-            background: #ff0000;
-            color: white;
-            padding: 15px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: bold;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.7);
+            position: fixed !important;
+            top: 70px !important;
+            right: 20px !important;
+            z-index: 15000 !important;
+            background: #ff0000 !important;
+            color: white !important;
+            padding: 15px 20px !important;
+            border: 3px solid #ffffff !important;
+            border-radius: 10px !important;
+            cursor: pointer !important;
+            font-size: 16px !important;
+            font-weight: bold !important;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.8) !important;
+            width: 120px !important;
+            height: 50px !important;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
         `;
         
-        button.addEventListener('click', this.handleTestButtonClick);
+        // Múltiplos event listeners para garantir funcionamento
+        button.addEventListener('click', (e) => {
+            console.log('🔴 FALLBACK BUTTON CLICKED!');
+            this.handleTestButtonClick(e);
+        });
+        
+        button.addEventListener('touchstart', (e) => {
+            console.log('🔴 FALLBACK BUTTON TOUCHED!');
+            this.handleTestButtonClick(e);
+        });
+        
+        button.addEventListener('mousedown', (e) => {
+            console.log('🔴 FALLBACK BUTTON PRESSED!');
+            this.handleTestButtonClick(e);
+        });
+        
+        // Adicionar ao body com alta prioridade
         document.body.appendChild(button);
         
-        console.log('🔴 Botão manual criado');
+        // Verificar se foi criado corretamente
+        setTimeout(() => {
+            const rect = button.getBoundingClientRect();
+            console.log('🔴 Botão fallback criado:', {
+                width: rect.width,
+                height: rect.height,
+                visible: button.offsetWidth > 0 && button.offsetHeight > 0
+            });
+        }, 100);
+        
+        console.log('🔴 Botão fallback adicionado ao DOM');
     },
 
     hideNotification: function () {
