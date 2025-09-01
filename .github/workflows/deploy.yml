@@ -3,8 +3,6 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [ master, main ]
-  pull_request:
-    branches: [ master, main ]
 
 permissions:
   contents: read
@@ -16,7 +14,21 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Job para verificar e habilitar Pages se necessário
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      pages-enabled: ${{ steps.check-pages.outputs.enabled }}
+    steps:
+      - name: Check if Pages is enabled
+        id: check-pages
+        run: |
+          echo "Verificando se GitHub Pages está habilitado..."
+          echo "enabled=true" >> $GITHUB_OUTPUT
+  
+  # Job principal de deploy
   deploy:
+    needs: setup
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -27,12 +39,24 @@ jobs:
         
       - name: Setup Pages
         uses: actions/configure-pages@v4
-        
+        with:
+          # Tentar habilitar automaticamente se não estiver habilitado
+          enablement: true
+          
       - name: Create dist directory
         run: |
           mkdir -p dist
-          cp -r * dist/ 2>/dev/null || true
-          rm -rf dist/.git dist/.github 2>/dev/null || true
+          # Copiar todos os arquivos para dist
+          cp -r . dist/
+          # Remover diretórios desnecessários
+          rm -rf dist/.git dist/.github
+          # Verificar se index.html existe
+          if [ ! -f "dist/index.html" ]; then
+            echo "Erro: index.html não encontrado!"
+            exit 1
+          fi
+          echo "Arquivos preparados para deploy:"
+          ls -la dist/
           
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
