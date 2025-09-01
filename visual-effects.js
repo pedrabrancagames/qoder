@@ -428,15 +428,22 @@ class VisualEffectsSystem {
             }
         }
         
-        // Feedback visual imediato
+        // Feedback visual imediato e mais claro
         console.log('🎨 Feedback visual: Teste iniciado');
         if (this.canvas && this.ctx) {
-            // Flash branco rápido para indicar que o teste começou
-            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            // Flash branco mais duradouro e texto de feedback
+            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
             this.ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+            
+            // Texto de feedback visual
+            this.ctx.fillStyle = '#000000';
+            this.ctx.font = 'bold 24px Arial';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText('TESTE INICIADO!', window.innerWidth/2, window.innerHeight/2);
+            
             setTimeout(() => {
                 this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-            }, 100);
+            }, 500);
         }
         
         // Limpar efeitos anteriores

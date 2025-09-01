@@ -268,7 +268,7 @@ AFRAME.registerComponent('game-manager', {
         button.innerHTML = '🎨 TESTE VISUAL';
         button.style.cssText = `
             position: fixed !important;
-            top: 100px !important;
+            top: 120px !important;
             left: 20px !important;
             z-index: 25000 !important;
             background: linear-gradient(45deg, #ff0000, #ff4444) !important;
@@ -321,16 +321,23 @@ AFRAME.registerComponent('game-manager', {
             
             console.log('🔴 FALLBACK BUTTON ATIVADO!', e.type);
             
-            // Feedback visual mais claro
-            button.style.transform = 'scale(0.9) !important';
-            button.style.boxShadow = '0 2px 15px rgba(255,0,0,0.5), inset 0 1px 3px rgba(255,255,255,0.1) !important';
+            // Feedback visual mais claro e duradouro
+            button.style.transform = 'scale(0.85) !important';
+            button.style.boxShadow = '0 1px 10px rgba(255,0,0,0.3), inset 0 1px 3px rgba(255,255,255,0.1) !important';
             button.style.backgroundColor = '#cc0000 !important';
+            button.style.opacity = '0.7 !important';
+            
+            // Texto de feedback
+            const originalText = button.innerHTML;
+            button.innerHTML = '✅ EXECUTANDO...';
             
             setTimeout(() => {
                 button.style.transform = 'scale(1) !important';
                 button.style.boxShadow = '0 8px 30px rgba(255,0,0,0.9), inset 0 2px 5px rgba(255,255,255,0.3) !important';
                 button.style.backgroundColor = 'linear-gradient(45deg, #ff0000, #ff4444) !important';
-            }, 200);
+                button.style.opacity = '1 !important';
+                button.innerHTML = originalText;
+            }, 1000);
             
             this.handleTestButtonClick(e);
         };
@@ -352,11 +359,18 @@ AFRAME.registerComponent('game-manager', {
                 button.style.display = 'block !important';
                 
                 // Verificar se há elementos sobrepostos
-                const elementsAtPoint = document.elementsFromPoint(rect.left + rect.width/2, rect.top + rect.height/2);
-                if (elementsAtPoint.length > 1 && elementsAtPoint[0] !== button) {
-                    console.warn('⚠️ Elementos sobrepostos detectados:', elementsAtPoint);
+                const centerX = rect.left + rect.width/2;
+                const centerY = rect.top + rect.height/2;
+                const elementsAtPoint = document.elementsFromPoint(centerX, centerY);
+                
+                // Se o botão não estiver no topo, forçar z-index ainda maior
+                if (elementsAtPoint.length > 0 && elementsAtPoint[0] !== button) {
+                    console.warn('⚠️ Elementos sobrepostos detectados:', elementsAtPoint.map(el => el.id || el.tagName));
                     // Forçar z-index ainda maior
                     button.style.zIndex = '30000 !important';
+                    
+                    // Tentar trazer o botão para frente
+                    document.body.appendChild(button);
                 }
                 
                 console.log('✅ Botão fallback totalmente protegido');
