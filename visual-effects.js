@@ -867,111 +867,119 @@ class EnergyConnection {
     }
 }
 
-// Efeito do feixe de prótons
+// Efeito do feixe de prótons (Refatorado)
 class ProtonBeamEffect {
     constructor() {
         this.type = 'proton_beam';
         this.active = true;
-        this.intensity = 1.0;
-        this.particles = [];
         this.particleTimer = 0;
+        this.particles = []; // Partículas gerenciadas dentro do efeito
     }
-    
+
     update() {
-        // Adicionar partículas do feixe com menor frequência
+        // Adicionar um fluxo constante de partículas
         this.particleTimer++;
-        if (this.particleTimer % 6 === 0) { // A cada 6 frames (reduzido)
-            for (let i = 0; i < 3; i++) { // Menos partículas
+        if (this.particleTimer % 2 === 0) { // A cada 2 frames para um fluxo denso
+            for (let i = 0; i < 8; i++) { // Mais partículas por vez
                 const particle = new ProtonParticle();
                 this.particles.push(particle);
             }
         }
-        
-        // Atualizar partículas existentes e limpar as mortas
+
+        // Atualizar e limpar partículas internas
         this.particles = this.particles.filter(p => {
             p.update();
-            return p.life > 0.05; // Threshold mais alto
+            return p.life > 0;
         });
-        
-        // Limitar número de partículas do feixe
-        if (this.particles.length > 20) {
-            this.particles = this.particles.slice(-20); // Manter apenas 20
-        }
     }
-    
+
     render(ctx) {
-        // Renderizar linha central do feixe
-        ctx.save();
-        ctx.strokeStyle = '#92F428';
-        ctx.lineWidth = 6;
-        ctx.globalAlpha = 0.8;
-        ctx.shadowColor = '#92F428';
-        ctx.shadowBlur = 20;
-        
-        const centerX = window.innerWidth / 2;
-        const centerY = window.innerHeight / 2;
-        const protonX = window.innerWidth - 60;
-        const protonY = window.innerHeight - 60;
-        
-        // Linha principal do feixe
-        ctx.beginPath();
-        ctx.moveTo(protonX, protonY);
-        ctx.lineTo(centerX, centerY);
-        ctx.stroke();
-        
-        // Linha secundária para mais espessura
-        ctx.lineWidth = 3;
-        ctx.globalAlpha = 0.4;
-        ctx.strokeStyle = '#CDDC39';
-        ctx.beginPath();
-        ctx.moveTo(protonX + 5, protonY);
-        ctx.lineTo(centerX + 5, centerY);
-        ctx.stroke();
-        
-        ctx.restore();
-        
-        // Renderizar partículas
-        this.particles.forEach(particle => {
-            particle.render(ctx);
-        });
+        // O "efeito" agora é apenas renderizar suas próprias partículas
+        this.particles.forEach(p => p.render(ctx));
     }
 }
 
-// Partícula do feixe de prótons
+// Partícula do feixe de prótons (Refatorada para se assemelhar à sucção)
 class ProtonParticle extends Particle {
     constructor() {
-        // Posição inicial: perto da proton pack (canto inferior direito)
-        const startX = window.innerWidth - 100;
-        const startY = window.innerHeight - 100;
-        
-        super(startX, startY);
-        
-        // Direção para o centro da tela (onde está o fantasma)
+        const protonPackIcon = document.getElementById('proton-pack-icon');
+        let startX = window.innerWidth - 70;
+        let startY = window.innerHeight - 70;
+
+        if (protonPackIcon) {
+            const rect = protonPackIcon.getBoundingClientRect();
+            startX = rect.left + rect.width / 2;
+            startY = rect.top + rect.height / 2;
+        }
+
         const targetX = window.innerWidth / 2;
         const targetY = window.innerHeight / 2;
         
-        const dx = targetX - this.x;
-        const dy = targetY - this.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        
-        const speed = 8; // Velocidade controlada
-        this.vx = (dx / distance) * speed;
-        this.vy = (dy / distance) * speed;
-        
-        this.life = 1.0; // Vida simplificada
-        this.maxLife = this.life;
-        this.size = 4; // Tamanho fixo
-        this.color = '#92F428'; // Cor fixa verde
-        this.glow = 10;
+        super(startX, startY);
+
+        this.startX = startX;
+        this.startY = startY;
+        this.targetX = targetX + (Math.random() - 0.5) * 50; // Pequena variação no alvo
+        this.targetY = targetY + (Math.random() - 0.5) * 50;
+
+        this.progress = 0;
+        this.speed = 0.02 + Math.random() * 0.03; // Velocidade mais rápida
+        this.life = 1.0;
+        this.maxLife = 1.0;
+        this.size = 1 + Math.random() * 4;
+        this.color = ['#92F428', '#CDDC39', '#8BC34A', '#FFFFFF'][Math.floor(Math.random() * 4)];
+        this.trail = [];
+        this.glow = 10 + Math.random() * 10;
+        this.curve = (Math.random() - 0.5) * 40;
     }
-    
+
     update() {
-        super.update();
-        this.life -= 0.02; // Diminui mais rápido
+        this.progress += this.speed;
+        
+        const curve = Math.sin(this.progress * Math.PI) * this.curve;
+        const easeProgress = this.easeInOut(this.progress);
+        
+        this.x = this.startX + (this.targetX - this.startX) * easeProgress + curve;
+        this.y = this.startY + (this.targetY - this.startY) * easeProgress;
+
+        this.trail.push({ x: this.x, y: this.y, alpha: this.alpha });
+        if (this.trail.length > 10) { // Trilha mais curta que a sucção
+            this.trail.shift();
+        }
+        
+        this.speed *= 1.01; // Leve aceleração
+        
+        if (this.progress >= 1.0) {
+            this.life = 0;
+        }
     }
-    
+
+    easeInOut(t) {
+        return t * t; // Ease-in
+    }
+
     render(ctx) {
-        // Renderizar partícula simples mas visível
+        // Renderizar trilha
+        ctx.save();
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = this.size / 2;
+        ctx.shadowColor = this.color;
+        ctx.shadowBlur = this.glow;
+        
+        ctx.beginPath();
+        this.trail.forEach((point, index) => {
+            const alpha = (index / this.trail.length) * 0.5;
+            ctx.globalAlpha = alpha;
+            if (index === 0) {
+                ctx.moveTo(point.x, point.y);
+            } else {
+                ctx.lineTo(point.x, point.y);
+            }
+        });
+        ctx.stroke();
+        ctx.restore();
+        
+        // Renderizar partícula principal
         ctx.save();
         ctx.globalAlpha = this.alpha;
         ctx.fillStyle = this.color;

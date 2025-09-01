@@ -174,7 +174,7 @@ body {
     position: fixed;
     top: 50%; /* Centraliza verticalmente */
     transform: translateY(-50%); /* Ajusta para o centro exato */
-    right: 0px; /* Mais próximo da borda */
+    right: 10px; /* Mais próximo da borda */
     width: 10px; /* Vertical */
     height: 110px; /* Altura do ícone do proton pack */
     background-color: rgba(0, 0, 0, 0.5);
