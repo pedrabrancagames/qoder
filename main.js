@@ -115,6 +115,9 @@ AFRAME.registerComponent('game-manager', {
         this.notificationModal = document.getElementById('notification-modal');
         this.notificationMessage = document.getElementById('notification-message');
         this.notificationCloseButton = document.getElementById('notification-close-button');
+        
+        // Botão de teste temporário
+        this.testEffectsButton = document.getElementById('test-effects-button');
     },
 
     initializeApp: function () {
@@ -155,6 +158,19 @@ AFRAME.registerComponent('game-manager', {
         this.protonPackIcon.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); });
         this.notificationCloseButton.addEventListener('click', this.hideNotification);
         this.el.sceneEl.addEventListener('enter-vr', this.initGame);
+        
+        // Event listener para botão de teste
+        if (this.testEffectsButton) {
+            this.testEffectsButton.addEventListener('click', () => {
+                console.log('🔴 BOTÃO DE TESTE CLICADO!');
+                if (window.visualEffectsSystem && window.visualEffectsSystem.isInitialized) {
+                    window.visualEffectsSystem.testVisualEffects();
+                } else {
+                    console.error('❌ Sistema de efeitos visuais não disponível');
+                    alert('Sistema de efeitos visuais não está inicializado. Verifique o console.');
+                }
+            });
+        }
     },
 
     showNotification: function (message) {
