@@ -184,14 +184,50 @@ AFRAME.registerComponent('game-manager', {
                 if (testButton) {
                     testButton.style.visibility = 'visible';
                     testButton.style.display = 'block';
+                    testButton.style.zIndex = '20000';
+                    testButton.style.pointerEvents = 'auto';
                     console.log('✅ Botão principal forçado a ser visível');
                 }
                 
                 if (fallbackButton) {
                     fallbackButton.style.visibility = 'visible';
                     fallbackButton.style.display = 'block';
+                    fallbackButton.style.zIndex = '25000';
+                    fallbackButton.style.pointerEvents = 'auto';
                     console.log('✅ Botão fallback forçado a ser visível');
                 }
+                
+                // Adicionar verificação periódica para garantir funcionamento
+                const arCheckInterval = setInterval(() => {
+                    const currentTestButton = document.getElementById('test-effects-button');
+                    const currentFallbackButton = document.getElementById('test-effects-fallback');
+                    
+                    // Se nenhum botão existir, criar fallback
+                    if (!currentTestButton && !currentFallbackButton) {
+                        console.warn('⚠️ Nenhum botão de teste encontrado na verificação periódica, criando fallback...');
+                        this.createTestButtonFallback();
+                        clearInterval(arCheckInterval);
+                        return;
+                    }
+                    
+                    // Se botão fallback existir, garantir seus estilos
+                    if (currentFallbackButton) {
+                        currentFallbackButton.style.visibility = 'visible';
+                        currentFallbackButton.style.display = 'block';
+                        currentFallbackButton.style.zIndex = '25000';
+                        currentFallbackButton.style.pointerEvents = 'auto';
+                        
+                        // Reaplicar event listeners se necessário
+                        const rect = currentFallbackButton.getBoundingClientRect();
+                        if (rect.width > 0 && rect.height > 0) {
+                            // Botão parece saudável
+                            console.log('✅ Botão fallback verificado e funcionando');
+                        }
+                    }
+                }, 2000);
+                
+                // Limpar interval após 30 segundos
+                setTimeout(() => clearInterval(arCheckInterval), 30000);
             }, 1000);
         });
         
@@ -200,6 +236,11 @@ AFRAME.registerComponent('game-manager', {
         
         if (this.testEffectsButton) {
             console.log('🔴 Botão encontrado, adicionando listener');
+            
+            // Remover listeners anteriores para evitar duplicação
+            this.testEffectsButton.removeEventListener('click', this.handleTestButtonClick);
+            this.testEffectsButton.removeEventListener('touchstart', this.handleTestButtonClick);
+            this.testEffectsButton.removeEventListener('mousedown', this.handleTestButtonClick);
             
             // Múltiplos tipos de eventos para garantir que funcione
             this.testEffectsButton.addEventListener('click', this.handleTestButtonClick);
@@ -266,30 +307,74 @@ AFRAME.registerComponent('game-manager', {
         const button = document.createElement('button');
         button.id = 'test-effects-fallback';
         button.innerHTML = '🎨 TESTE VISUAL';
-        button.style.cssText = `
-            position: fixed !important;
-            top: 120px !important;
-            left: 20px !important;
-            z-index: 25000 !important;
-            background: linear-gradient(45deg, #ff0000, #ff4444) !important;
-            color: white !important;
-            padding: 18px 25px !important;
-            border: 4px solid #ffffff !important;
-            border-radius: 15px !important;
-            cursor: pointer !important;
-            font-size: 18px !important;
-            font-weight: bold !important;
-            box-shadow: 0 8px 30px rgba(255,0,0,0.9), inset 0 2px 5px rgba(255,255,255,0.3) !important;
-            width: 140px !important;
-            height: 60px !important;
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            pointer-events: auto !important;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8) !important;
-            transform: none !important;
-            transition: all 0.2s ease !important;
-        `;
+        
+        // Estilo otimizado para contexto AR
+        const isInAR = document.querySelector('a-scene')?.is('ar-mode') || document.querySelector('a-scene')?.is('vr-mode');
+        
+        if (isInAR) {
+            // Estilo especial para contexto AR com propriedades otimizadas
+            button.style.cssText = `
+                position: fixed !important;
+                top: 120px !important;
+                left: 20px !important;
+                z-index: 30000 !important;
+                background: linear-gradient(45deg, #ff0000, #ff4444) !important;
+                color: white !important;
+                padding: 20px 25px !important;
+                border: 5px solid #ffffff !important;
+                border-radius: 15px !important;
+                cursor: pointer !important;
+                font-size: 18px !important;
+                font-weight: bold !important;
+                box-shadow: 0 10px 35px rgba(255,0,0,1), inset 0 3px 8px rgba(255,255,255,0.4) !important;
+                width: 150px !important;
+                height: 70px !important;
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                pointer-events: auto !important;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.8) !important;
+                transform: none !important;
+                transition: all 0.3s ease !important;
+                /* Propriedades extras para contexto AR */
+                -webkit-transform: translateZ(0) !important;
+                transform: translateZ(0) !important;
+                will-change: transform !important;
+                /* Forçar interatividade no contexto AR */
+                touch-action: manipulation !important;
+                -webkit-touch-callout: default !important;
+                -webkit-user-select: none !important;
+                -moz-user-select: none !important;
+                -ms-user-select: none !important;
+                user-select: none !important;
+            `;
+        } else {
+            // Estilo normal
+            button.style.cssText = `
+                position: fixed !important;
+                top: 120px !important;
+                left: 20px !important;
+                z-index: 25000 !important;
+                background: linear-gradient(45deg, #ff0000, #ff4444) !important;
+                color: white !important;
+                padding: 18px 25px !important;
+                border: 4px solid #ffffff !important;
+                border-radius: 15px !important;
+                cursor: pointer !important;
+                font-size: 18px !important;
+                font-weight: bold !important;
+                box-shadow: 0 8px 30px rgba(255,0,0,0.9), inset 0 2px 5px rgba(255,255,255,0.3) !important;
+                width: 140px !important;
+                height: 60px !important;
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                pointer-events: auto !important;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.8) !important;
+                transform: none !important;
+                transition: all 0.2s ease !important;
+            `;
+        }
         
         // Efeito hover/active
         button.addEventListener('mouseenter', () => {
@@ -319,7 +404,7 @@ AFRAME.registerComponent('game-manager', {
             e.stopPropagation();
             e.stopImmediatePropagation();
             
-            console.log('🔴 FALLBACK BUTTON ATIVADO!', e.type);
+            console.log('🔴 FALLBACK BUTTON ATIVADO!', e.type, e.target);
             
             // Feedback visual mais claro e duradouro
             button.style.transform = 'scale(0.85) !important';
@@ -342,9 +427,36 @@ AFRAME.registerComponent('game-manager', {
             this.handleTestButtonClick(e);
         };
         
-        button.addEventListener('click', handleClick, { capture: true });
-        button.addEventListener('touchstart', handleClick, { capture: true });
-        button.addEventListener('mousedown', handleClick, { capture: true });
+        // Event listeners robustos para contexto AR
+        button.addEventListener('click', handleClick, { capture: true, passive: false });
+        button.addEventListener('touchstart', handleClick, { capture: true, passive: false });
+        button.addEventListener('mousedown', handleClick, { capture: true, passive: false });
+        
+        // Adicionar listener direto no document para capturar eventos que podem ser perdidos
+        const globalClickListener = (e) => {
+            const rect = button.getBoundingClientRect();
+            const x = e.clientX || (e.touches && e.touches[0] && e.touches[0].clientX) || 0;
+            const y = e.clientY || (e.touches && e.touches[0] && e.touches[0].clientY) || 0;
+            
+            // Verificar se o clique foi dentro do botão
+            if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+                console.log('🔴 CLICK GLOBAL DETECTADO NO BOTÃO FALLBACK!', e.type);
+                handleClick(e);
+                return false; // Prevenir propagação adicional
+            }
+        };
+        
+        // Listeners globais com prioridade máxima
+        document.addEventListener('click', globalClickListener, { capture: true, passive: false });
+        document.addEventListener('touchstart', globalClickListener, { capture: true, passive: false });
+        document.addEventListener('mousedown', globalClickListener, { capture: true, passive: false });
+        
+        // Remover listeners globais quando o botão for removido
+        button.addEventListener('DOMNodeRemoved', () => {
+            document.removeEventListener('click', globalClickListener, { capture: true });
+            document.removeEventListener('touchstart', globalClickListener, { capture: true });
+            document.removeEventListener('mousedown', globalClickListener, { capture: true });
+        });
         
         // Adicionar ao body com máxima prioridade
         document.body.appendChild(button);
@@ -372,6 +484,21 @@ AFRAME.registerComponent('game-manager', {
                     // Tentar trazer o botão para frente
                     document.body.appendChild(button);
                 }
+                
+                // Verificação de eventos ativos
+                console.log('🔍 Verificando eventos do botão fallback...');
+                button.onclick = (e) => {
+                    console.log('🔴 CLICK DIRETO NO BOTÃO FALLBACK!');
+                    handleClick(e);
+                };
+                button.ontouchstart = (e) => {
+                    console.log('🔴 TOUCH DIRETO NO BOTÃO FALLBACK!');
+                    handleClick(e);
+                };
+                button.onmousedown = (e) => {
+                    console.log('🔴 MOUSE DOWN DIRETO NO BOTÃO FALLBACK!');
+                    handleClick(e);
+                };
                 
                 console.log('✅ Botão fallback totalmente protegido');
             } else {
@@ -403,6 +530,56 @@ AFRAME.registerComponent('game-manager', {
         }, 200);
         
         console.log('🔴 Botão fallback OTIMIZADO adicionado ao DOM');
+        
+        // Adicionar verificação periódica para garantir que o botão permaneça funcional
+        const interval = setInterval(() => {
+            if (!document.contains(button)) {
+                clearInterval(interval);
+                return;
+            }
+            
+            // Reaplicar estilos se necessário
+            if (isInAR) {
+                button.style.cssText = `
+                    position: fixed !important;
+                    top: 120px !important;
+                    left: 20px !important;
+                    z-index: 30000 !important;
+                    background: linear-gradient(45deg, #ff0000, #ff4444) !important;
+                    color: white !important;
+                    padding: 20px 25px !important;
+                    border: 5px solid #ffffff !important;
+                    border-radius: 15px !important;
+                    cursor: pointer !important;
+                    font-size: 18px !important;
+                    font-weight: bold !important;
+                    box-shadow: 0 10px 35px rgba(255,0,0,1), inset 0 3px 8px rgba(255,255,255,0.4) !important;
+                    width: 150px !important;
+                    height: 70px !important;
+                    display: block !important;
+                    visibility: visible !important;
+                    opacity: 1 !important;
+                    pointer-events: auto !important;
+                    text-shadow: 2px 2px 4px rgba(0,0,0,0.8) !important;
+                    transform: none !important;
+                    transition: all 0.3s ease !important;
+                    /* Propriedades extras para contexto AR */
+                    -webkit-transform: translateZ(0) !important;
+                    transform: translateZ(0) !important;
+                    will-change: transform !important;
+                    /* Forçar interatividade no contexto AR */
+                    touch-action: manipulation !important;
+                    -webkit-touch-callout: default !important;
+                    -webkit-user-select: none !important;
+                    -moz-user-select: none !important;
+                    -ms-user-select: none !important;
+                    user-select: none !important;
+                `;
+            }
+        }, 1000);
+        
+        // Limpar o interval após 10 segundos
+        setTimeout(() => clearInterval(interval), 10000);
     },
 
     hideNotification: function () {

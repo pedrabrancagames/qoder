@@ -400,10 +400,23 @@ class VisualEffectsSystem {
                         this._executeTest();
                     } else {
                         console.error('❌ Falha na re-inicialização');
-                        alert('Sistema de efeitos visuais não está inicializado. Verifique o console.');
+                        // Tentar forçar a criação do canvas
+                        this.createCanvas();
+                        this.setupCanvas();
+                        this.start();
+                        this.isInitialized = true;
+                        this._executeTest();
                     }
-                }, 1000);
+                }, 1500);
                 return;
+            }
+            
+            // Forçar criação do canvas se não existir
+            if (!this.canvas) {
+                console.log('🔄 Forçando criação do canvas...');
+                this.createCanvas();
+                this.setupCanvas();
+                this.start();
             }
             
             alert('Sistema de efeitos visuais não está inicializado. Verifique o console.');
@@ -411,7 +424,7 @@ class VisualEffectsSystem {
         }
         
         this._executeTest();
-    }
+    },
     
     _executeTest() {
         // Verificação extra para contexto AR
@@ -424,6 +437,8 @@ class VisualEffectsSystem {
             if (this.canvas) {
                 this.canvas.style.visibility = 'visible';
                 this.canvas.style.opacity = '1';
+                this.canvas.style.pointerEvents = 'none';
+                this.canvas.style.zIndex = '9999';
                 console.log('✅ Canvas forçado a ser visível');
             }
         }
