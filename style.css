@@ -89,6 +89,86 @@ body {
     cursor: not-allowed;
 }
 
+/* Tela de Login */
+#auth-buttons-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+    max-width: 350px;
+}
+
+.auth-button {
+    padding: 15px;
+    background-color: #333;
+    border: 2px solid #555;
+    color: #fff;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    font-size: 1.1em;
+}
+
+#google-login-button {
+    background-color: #4285F4;
+    border-color: #4285F4;
+}
+
+#email-login-screen h2 {
+    margin-bottom: 20px;
+}
+
+#logo-small {
+    width: 150px;
+    margin-bottom: 20px;
+}
+
+.input-group {
+    margin-bottom: 15px;
+    width: 100%;
+    max-width: 350px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px;
+    font-size: 1em;
+    border-radius: 5px;
+    border: 1px solid #555;
+    background-color: #222;
+    color: #fff;
+    box-sizing: border-box;
+}
+
+.error-text {
+    color: #ff4444;
+    height: 20px;
+    margin-bottom: 10px;
+}
+
+#email-auth-buttons-container {
+    display: flex;
+    gap: 10px;
+}
+
+#email-login-button, #email-signup-button {
+    display: inline-block;
+    background-color: #92F428;
+    color: #000;
+}
+
+.text-button {
+    margin-top: 20px;
+    background: none;
+    border: none;
+    color: #92F428;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+
+
 /* Tela de Seleção de Local */
 #location-buttons-container {
     display: flex;

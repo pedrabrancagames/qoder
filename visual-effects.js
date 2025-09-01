@@ -908,8 +908,8 @@ class ProtonParticle extends Particle {
 
         if (protonPackIcon) {
             const rect = protonPackIcon.getBoundingClientRect();
-            startX = (rect.left + rect.width / 2) - 15;
-            startY = rect.top - 20;
+            startX = (rect.left + rect.width / 2) - 30; // Ajustado para a esquerda
+            startY = rect.top - 15; // Ajustado para baixo
         }
 
         const targetX = window.innerWidth / 2;

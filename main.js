@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signInAnonymously, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getDatabase, ref, set, get, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 AFRAME.registerComponent('game-manager', {
@@ -115,6 +115,19 @@ AFRAME.registerComponent('game-manager', {
         this.notificationModal = document.getElementById('notification-modal');
         this.notificationMessage = document.getElementById('notification-message');
         this.notificationCloseButton = document.getElementById('notification-close-button');
+
+        // Auth Screens
+        this.emailLoginScreen = document.getElementById('email-login-screen');
+        this.emailInput = document.getElementById('email-input');
+        this.passwordInput = document.getElementById('password-input');
+        this.authErrorMessage = document.getElementById('auth-error-message');
+
+        // Auth Buttons
+        this.emailLoginShowButton = document.getElementById('email-login-show-button');
+        this.anonymousLoginButton = document.getElementById('anonymous-login-button');
+        this.emailLoginButton = document.getElementById('email-login-button');
+        this.emailSignupButton = document.getElementById('email-signup-button');
+        this.backToMainLoginButton = document.getElementById('back-to-main-login');
     },
 
     initializeApp: function () {
@@ -128,6 +141,18 @@ AFRAME.registerComponent('game-manager', {
 
     addEventListeners: function () {
         this.googleLoginButton.addEventListener('click', () => signInWithPopup(this.auth, this.provider));
+        this.anonymousLoginButton.addEventListener('click', this.signInAsGuest);
+        this.emailLoginShowButton.addEventListener('click', () => {
+            this.loginScreen.classList.add('hidden');
+            this.emailLoginScreen.classList.remove('hidden');
+        });
+        this.backToMainLoginButton.addEventListener('click', () => {
+            this.emailLoginScreen.classList.add('hidden');
+            this.loginScreen.classList.remove('hidden');
+        });
+        this.emailLoginButton.addEventListener('click', this.signInWithEmail);
+        this.emailSignupButton.addEventListener('click', this.signUpWithEmail);
+
         this.enterButton.addEventListener('click', async () => {
             if (!this.selectedLocation) return;
             try {
@@ -168,6 +193,54 @@ AFRAME.registerComponent('game-manager', {
         this.notificationModal.classList.add('hidden');
     },
 
+    handleAuthError: function (error) {
+        console.error("Authentication Error:", error.code, error.message);
+        switch (error.code) {
+            case 'auth/user-not-found':
+            case 'auth/wrong-password':
+                this.authErrorMessage.textContent = 'Email ou senha inválidos.';
+                break;
+            case 'auth/invalid-email':
+                this.authErrorMessage.textContent = 'O formato do email é inválido.';
+                break;
+            case 'auth/email-already-in-use':
+                this.authErrorMessage.textContent = 'Este email já está em uso.';
+                break;
+            case 'auth/weak-password':
+                this.authErrorMessage.textContent = 'A senha deve ter pelo menos 6 caracteres.';
+                break;
+            default:
+                this.authErrorMessage.textContent = 'Ocorreu um erro. Tente novamente.';
+                break;
+        }
+    },
+
+    signInWithEmail: function () {
+        const email = this.emailInput.value;
+        const password = this.passwordInput.value;
+        if (!email || !password) {
+            this.authErrorMessage.textContent = 'Por favor, preencha todos os campos.';
+            return;
+        }
+        signInWithEmailAndPassword(this.auth, email, password)
+            .catch(this.handleAuthError);
+    },
+
+    signUpWithEmail: function () {
+        const email = this.emailInput.value;
+        const password = this.passwordInput.value;
+        if (!email || !password) {
+            this.authErrorMessage.textContent = 'Por favor, preencha todos os campos.';
+            return;
+        }
+        createUserWithEmailAndPassword(this.auth, email, password)
+            .catch(this.handleAuthError);
+    },
+
+    signInAsGuest: function () {
+        signInAnonymously(this.auth).catch(this.handleAuthError);
+    },
+
     saveUserToDatabase: function (user) {
         const userRef = ref(this.database, 'users/' + user.uid);
         get(userRef).then((snapshot) => {
@@ -175,7 +248,16 @@ AFRAME.registerComponent('game-manager', {
                 this.userStats = snapshot.val();
                 this.inventory = this.userStats.inventory || [];
             } else {
-                const newUserStats = { displayName: user.displayName, email: user.email, points: 0, captures: 0, level: 1, inventory: [], ecto1Unlocked: false };
+                let displayName = 'Caça-Fantasma';
+                if (user.isAnonymous) {
+                    displayName = 'Visitante';
+                } else if (user.displayName) {
+                    displayName = user.displayName;
+                } else if (user.email) {
+                    displayName = user.email.split('@')[0];
+                }
+
+                const newUserStats = { displayName: displayName, email: user.email, points: 0, captures: 0, level: 1, inventory: [], ecto1Unlocked: false };
                 set(userRef, newUserStats);
                 this.userStats = newUserStats;
                 this.inventory = [];
@@ -189,13 +271,13 @@ AFRAME.registerComponent('game-manager', {
             this.currentUser = user;
             this.saveUserToDatabase(user);
             this.loginScreen.classList.add('hidden');
+            this.emailLoginScreen.classList.add('hidden');
             this.locationScreen.classList.remove('hidden');
         } else {
             this.currentUser = null;
             this.loginScreen.classList.remove('hidden');
             this.locationScreen.classList.add('hidden');
             this.gameUi.classList.add('hidden');
-            this.googleLoginButton.style.display = 'block';
         }
     },
 

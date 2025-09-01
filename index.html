@@ -70,7 +70,28 @@
         <div id="login-screen" class="ui-screen ui-element">
             <img id="logo" src="assets/images/logo.png" alt="Ghostbusters Logo">
             <p id="loading-info">Autenticação necessária para caçar.</p>
-            <button id="google-login-button" class="action-button ui-element">Login com Google</button>
+            <div id="auth-buttons-container">
+                <button id="google-login-button" class="auth-button ui-element">Login com Google</button>
+                <button id="email-login-show-button" class="auth-button ui-element">Login com Email</button>
+                <button id="anonymous-login-button" class="auth-button ui-element">Jogar como Visitante</button>
+            </div>
+        </div>
+
+        <div id="email-login-screen" class="ui-screen ui-element hidden">
+            <img id="logo-small" src="assets/images/logo.png" alt="Ghostbusters Logo">
+            <h2>Login com Email</h2>
+            <div class="input-group">
+                <input type="email" id="email-input" placeholder="Email">
+            </div>
+            <div class="input-group">
+                <input type="password" id="password-input" placeholder="Senha">
+            </div>
+            <p id="auth-error-message" class="error-text"></p>
+            <div id="email-auth-buttons-container">
+                <button id="email-login-button" class="action-button ui-element">Entrar</button>
+                <button id="email-signup-button" class="action-button ui-element">Cadastrar</button>
+            </div>
+            <button id="back-to-main-login" class="text-button ui-element">Voltar</button>
         </div>
 
         <div id="location-screen" class="ui-screen ui-element hidden">
