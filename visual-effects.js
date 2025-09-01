@@ -909,7 +909,7 @@ class ProtonParticle extends Particle {
         if (protonPackIcon) {
             const rect = protonPackIcon.getBoundingClientRect();
             startX = rect.left + rect.width / 2;
-            startY = rect.top + rect.height / 2;
+            startY = rect.top + rect.height * 0.2; // Ajustado para o topo do ícone
         }
 
         const targetX = window.innerWidth / 2;
@@ -927,7 +927,7 @@ class ProtonParticle extends Particle {
         this.life = 1.0;
         this.maxLife = 1.0;
         this.size = 1 + Math.random() * 4;
-        this.color = ['#92F428', '#CDDC39', '#8BC34A', '#FFFFFF'][Math.floor(Math.random() * 4)];
+        this.color = ['#FFA500', '#FF6347', '#00BFFF', '#1E90FF', '#FFFFFF'][Math.floor(Math.random() * 5)]; // Paleta de cores Laranja/Azul
         this.trail = [];
         this.glow = 10 + Math.random() * 10;
         this.curve = (Math.random() - 0.5) * 40;
