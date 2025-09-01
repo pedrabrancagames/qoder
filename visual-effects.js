@@ -94,11 +94,21 @@ class VisualEffectsSystem {
     setupCanvas() {
         const updateSize = () => {
             const dpr = window.devicePixelRatio || 1;
-            this.canvas.width = window.innerWidth * dpr;
-            this.canvas.height = window.innerHeight * dpr;
-            this.canvas.style.width = window.innerWidth + 'px';
-            this.canvas.style.height = window.innerHeight + 'px';
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            
+            // Definir tamanho real do canvas
+            this.canvas.width = width * dpr;
+            this.canvas.height = height * dpr;
+            
+            // Definir tamanho CSS
+            this.canvas.style.width = width + 'px';
+            this.canvas.style.height = height + 'px';
+            
+            // Ajustar escala do contexto
             this.ctx.scale(dpr, dpr);
+            
+            console.log(`🖼️ Canvas redimensionado: ${width}x${height} (DPR: ${dpr})`);
         };
         
         updateSize();
@@ -129,7 +139,15 @@ class VisualEffectsSystem {
             this.setupCanvas();
         }
         
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        // Limpar canvas com fundo semi-transparente para debug
+        this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        
+        // Debug: desenhar borda vermelha no canvas para verificar se está funcionando
+        if (this.particles.length > 0 || this.effects.length > 0) {
+            this.ctx.strokeStyle = '#ff0000';
+            this.ctx.lineWidth = 2;
+            this.ctx.strokeRect(5, 5, window.innerWidth - 10, window.innerHeight - 10);
+        }
         
         // Atualizar e renderizar partículas
         this.updateParticles();
@@ -139,8 +157,8 @@ class VisualEffectsSystem {
         this.updateEffects();
         
         // Debug info apenas quando necessário (reduzido drasticamente)
-        if (this.particles.length > 80) {
-            console.log(`🎨 SOBRECARGA: ${this.particles.length} partículas ativas`);
+        if (this.particles.length > 10) {
+            console.log(`🎨 Renderizando: ${this.particles.length} partículas, ${this.effects.length} efeitos`);
         }
         
         this.animationId = requestAnimationFrame(() => this.animate());
@@ -337,6 +355,9 @@ class VisualEffectsSystem {
     // Função de teste visual
     testVisualEffects() {
         console.log('📝 TESTE VISUAL OTIMIZADO - INICIANDO');
+        console.log('Canvas:', this.canvas);
+        console.log('Dimensões canvas:', this.canvas?.width, 'x', this.canvas?.height);
+        console.log('Dimensões tela:', window.innerWidth, 'x', window.innerHeight);
         
         if (!this.isInitialized) {
             console.error('❌ Sistema não inicializado!');
@@ -346,38 +367,61 @@ class VisualEffectsSystem {
         // Limpar efeitos anteriores
         this.clearAllEffects();
         
-        // Teste visual básico: desenhar retângulo verde
-        this.ctx.fillStyle = '#92F428';
-        this.ctx.fillRect(50, 50, 100, 100);
-        console.log('🟫 Retângulo verde de teste desenhado');
+        // Teste visual básico: desenhar retângulos coloridos grandes
+        console.log('🟫 Desenhando indicadores visuais...');
         
-        // Teste 1: Celebração pequena
+        // Retângulo verde grande
+        this.ctx.fillStyle = '#00FF00';
+        this.ctx.fillRect(50, 50, 200, 100);
+        
+        // Retângulo vermelho
+        this.ctx.fillStyle = '#FF0000';
+        this.ctx.fillRect(window.innerWidth - 250, 50, 200, 100);
+        
+        // Retângulo azul no centro
+        this.ctx.fillStyle = '#0000FF';
+        this.ctx.fillRect(window.innerWidth/2 - 100, window.innerHeight/2 - 50, 200, 100);
+        
+        // Texto de teste
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.font = '20px Arial';
+        this.ctx.fillText('TESTE VISUAL ATIVO', window.innerWidth/2 - 80, window.innerHeight/2);
+        
+        console.log('🟫 Retângulos e texto desenhados');
+        
+        // Teste 1: Celebração no centro
         setTimeout(() => {
+            console.log('🎉 Iniciando celebração...');
             this.showCelebrationEffect(window.innerWidth / 2, window.innerHeight / 2, 'ghost_captured');
-            console.log('🎉 Teste: Celebração ativada');
-        }, 500);
+        }, 1000);
         
-        // Teste 2: Feixe por 3 segundos
+        // Teste 2: Feixe de prótons por 3 segundos
         setTimeout(() => {
+            console.log('⚡ Iniciando feixe de prótons...');
             this.startProtonBeamEffect();
-            console.log('⚡ Teste: Feixe ativado');
             
             setTimeout(() => {
+                console.log('⚡ Parando feixe de prótons...');
                 this.stopProtonBeamEffect();
-                console.log('⚡ Teste: Feixe parado');
             }, 3000);
-        }, 1500);
+        }, 2000);
         
-        // Teste 3: Sucção pequena
+        // Teste 3: Sucção
         setTimeout(() => {
+            console.log('🌪️ Iniciando sucção...');
             this.showSuctionEffect(
-                window.innerWidth / 2 - 50, 
-                window.innerHeight / 2 - 50,
-                window.innerWidth / 2 + 50, 
-                window.innerHeight / 2 + 50
+                window.innerWidth / 4, 
+                window.innerHeight / 4,
+                (window.innerWidth * 3) / 4, 
+                (window.innerHeight * 3) / 4
             );
-            console.log('🌪️ Teste: Sucção ativada');
-        }, 5000);
+        }, 6000);
+        
+        // Limpar retângulos de teste após 8 segundos
+        setTimeout(() => {
+            console.log('🧹 Limpando teste visual...');
+            this.clearAllEffects();
+        }, 8000);
     }
     
     getCelebrationColors(type) {

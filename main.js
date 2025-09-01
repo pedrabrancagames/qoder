@@ -159,23 +159,82 @@ AFRAME.registerComponent('game-manager', {
         this.notificationCloseButton.addEventListener('click', this.hideNotification);
         this.el.sceneEl.addEventListener('enter-vr', this.initGame);
         
-        // Event listener para botão de teste
+        // Event listener para botão de teste - MELHORADO
+        console.log('🔴 Verificando botão de teste:', this.testEffectsButton);
+        
         if (this.testEffectsButton) {
-            this.testEffectsButton.addEventListener('click', () => {
-                console.log('🔴 BOTÃO DE TESTE CLICADO!');
-                if (window.visualEffectsSystem && window.visualEffectsSystem.isInitialized) {
-                    window.visualEffectsSystem.testVisualEffects();
-                } else {
-                    console.error('❌ Sistema de efeitos visuais não disponível');
-                    alert('Sistema de efeitos visuais não está inicializado. Verifique o console.');
-                }
-            });
+            console.log('🔴 Botão encontrado, adicionando listener');
+            
+            // Múltiplos tipos de eventos para garantir que funcione
+            this.testEffectsButton.addEventListener('click', this.handleTestButtonClick);
+            this.testEffectsButton.addEventListener('touchstart', this.handleTestButtonClick);
+            this.testEffectsButton.addEventListener('mousedown', this.handleTestButtonClick);
+            
+            // Verificar se o botão é visível e clicável
+            const rect = this.testEffectsButton.getBoundingClientRect();
+            console.log('🔴 Posição do botão:', rect);
+            console.log('🔴 Estilo do botão:', getComputedStyle(this.testEffectsButton));
+        } else {
+            console.error('❌ Botão de teste NÃO encontrado!');
+            
+            // Criar botão manualmente como fallback
+            setTimeout(() => {
+                this.createTestButtonFallback();
+            }, 2000);
         }
     },
 
     showNotification: function (message) {
         this.notificationMessage.textContent = message;
         this.notificationModal.classList.remove('hidden');
+    },
+
+    handleTestButtonClick: function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        console.log('🔴 BOTÃO DE TESTE CLICADO!', e.type);
+        
+        if (window.visualEffectsSystem && window.visualEffectsSystem.isInitialized) {
+            console.log('🔴 Iniciando teste de efeitos visuais');
+            window.visualEffectsSystem.testVisualEffects();
+        } else {
+            console.error('❌ Sistema de efeitos visuais não disponível');
+            console.log('Estado do sistema:', {
+                exists: !!window.visualEffectsSystem,
+                initialized: window.visualEffectsSystem?.isInitialized,
+                canvas: window.visualEffectsSystem?.canvas
+            });
+            alert('Sistema de efeitos visuais não está inicializado. Verifique o console.');
+        }
+    },
+
+    createTestButtonFallback: function() {
+        console.log('🔴 Criando botão de teste manual');
+        
+        const button = document.createElement('button');
+        button.id = 'test-effects-fallback';
+        button.textContent = 'TESTE MANUAL';
+        button.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 12000;
+            background: #ff0000;
+            color: white;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.7);
+        `;
+        
+        button.addEventListener('click', this.handleTestButtonClick);
+        document.body.appendChild(button);
+        
+        console.log('🔴 Botão manual criado');
     },
 
     hideNotification: function () {
