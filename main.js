@@ -340,8 +340,14 @@ AFRAME.registerComponent('game-manager', {
             captureDuration: isStrong ? this.CAPTURE_DURATION_STRONG : this.CAPTURE_DURATION_NORMAL
         };
         
-        const iconUrl = isStrong ? 'assets/images/pke_meter.png' : 'assets/images/logo.png';
-        const ghostIcon = L.icon({ iconUrl: iconUrl, iconSize: [35, 35] });
+        const ghostEmoji = isStrong ? '🎃' : '👻';
+        const ghostIcon = L.divIcon({
+            className: 'ghost-marker',
+            html: `<div style="font-size: 24px; text-shadow: 0 0 5px #000;">${ghostEmoji}</div>`,
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
+        });
+
         if(this.ghostMarker) this.ghostMarker.setLatLng([this.ghostData.lat, this.ghostData.lon]).setIcon(ghostIcon);
         else this.ghostMarker = L.marker([this.ghostData.lat, this.ghostData.lon], { icon: ghostIcon }).addTo(this.map);
     },

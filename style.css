@@ -741,3 +741,10 @@ body {
 .a-enter-ar-button {
     display: none !important;
 }
+
+/* Estilos para marcadores do Leaflet */
+.ecto-marker, .player-marker, .ghost-marker {
+    text-align: center;
+    line-height: 30px; /* Ajustado para o tamanho da fonte */
+    text-shadow: 0 0 3px #000000;
+}
