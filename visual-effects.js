@@ -15,10 +15,10 @@ class VisualEffectsSystem {
         
         // Configurações
         this.config = {
-            maxParticles: 500,
-            ghostCaptureParticles: 100,
-            suctionParticles: 50,
-            celebrationParticles: 150,
+            maxParticles: 100, // Reduzido drasticamente
+            ghostCaptureParticles: 30, // Reduzido
+            suctionParticles: 20, // Reduzido
+            celebrationParticles: 40, // Reduzido
             protonBeamWidth: 8,
             effectDuration: 3000
         };
@@ -44,6 +44,12 @@ class VisualEffectsSystem {
             this.setupCanvas();
             this.start();
             this.isInitialized = true;
+            
+            // Limpeza automática a cada 5 segundos
+            setInterval(() => {
+                this.cleanupParticles();
+            }, 5000);
+            
             console.log('🎨 Sistema de Efeitos Visuais inicializado com sucesso');
         } catch (error) {
             console.error('❌ Erro ao inicializar Sistema de Efeitos Visuais:', error);
@@ -125,13 +131,6 @@ class VisualEffectsSystem {
         
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // Debug: desenhar fundo semi-transparente ocasionalmente para verificar se canvas funciona
-        if (this.particles.length > 0 || this.effects.length > 0) {
-            // Pequeno indicador visual no canto para confirmar que o canvas está funcionando
-            this.ctx.fillStyle = 'rgba(146, 244, 40, 0.1)';
-            this.ctx.fillRect(0, 0, 50, 50);
-        }
-        
         // Atualizar e renderizar partículas
         this.updateParticles();
         this.renderParticles();
@@ -139,19 +138,25 @@ class VisualEffectsSystem {
         // Atualizar efeitos especiais
         this.updateEffects();
         
-        // Debug info
-        if (this.particles.length > 0 || this.effects.length > 0) {
-            console.log(`🎨 Renderizando: ${this.particles.length} partículas, ${this.effects.length} efeitos`);
+        // Debug info apenas quando há muitas partículas
+        if (this.particles.length > 50 || this.effects.length > 2) {
+            console.log(`🎨 MUITAS PARTÍCULAS: ${this.particles.length} partículas, ${this.effects.length} efeitos`);
         }
         
         this.animationId = requestAnimationFrame(() => this.animate());
     }
     
     updateParticles() {
+        // Limpar partículas mortas de forma mais agressiva
         this.particles = this.particles.filter(particle => {
             particle.update();
-            return particle.life > 0;
+            return particle.life > 0.01; // Threshold mais alto para remoção
         });
+        
+        // Limitar número máximo de partículas para evitar travamento
+        if (this.particles.length > this.config.maxParticles) {
+            this.particles = this.particles.slice(-this.config.maxParticles); // Manter apenas as mais recentes
+        }
     }
     
     renderParticles() {
@@ -182,7 +187,7 @@ class VisualEffectsSystem {
         }
         
         const colors = this.getCelebrationColors(type);
-        const particleCount = type === 'ecto1_unlocked' ? 400 : 300; // Ainda mais partículas
+        const particleCount = 40; // Número fixo reduzido
         
         // Partículas principais
         for (let i = 0; i < particleCount; i++) {
@@ -190,85 +195,49 @@ class VisualEffectsSystem {
             this.particles.push(particle);
         }
         
-        // Efeito de explosão circular mais intenso
+        // Efeito de explosão circular
         const explosion = new ExplosionEffect(x, y, colors, type);
         this.effects.push(explosion);
         
-        // Partículas extras em múltiplos círculos
-        for (let ring = 1; ring <= 3; ring++) {
-            for (let i = 0; i < 30; i++) {
-                const angle = (i / 30) * Math.PI * 2;
-                const radius = ring * 40 + Math.random() * 30;
-                const px = x + Math.cos(angle) * radius;
-                const py = y + Math.sin(angle) * radius;
-                const particle = new CelebrationParticle(px, py, colors);
-                particle.life *= (1.5 - ring * 0.2); // Círculos externos duram menos
-                this.particles.push(particle);
-            }
-        }
-        
-        // Partículas em estrela
-        for (let i = 0; i < 8; i++) {
-            const angle = (i / 8) * Math.PI * 2;
-            for (let j = 0; j < 15; j++) {
-                const radius = j * 10 + Math.random() * 20;
-                const px = x + Math.cos(angle) * radius;
-                const py = y + Math.sin(angle) * radius;
-                const particle = new CelebrationParticle(px, py, colors);
-                particle.size *= 1.5; // Partículas maiores
-                this.particles.push(particle);
-            }
+        // Partículas em círculo simples
+        for (let i = 0; i < 12; i++) {
+            const angle = (i / 12) * Math.PI * 2;
+            const radius = 30 + Math.random() * 20;
+            const px = x + Math.cos(angle) * radius;
+            const py = y + Math.sin(angle) * radius;
+            const particle = new CelebrationParticle(px, py, colors);
+            this.particles.push(particle);
         }
         
         // Feedback tátil se disponível
         this.triggerHapticFeedback();
         
-        console.log(`🎉 Efeito de celebração INTENSO: ${type} em (${x}, ${y}) com ${this.particles.length} partículas`);
+        console.log(`🎉 Efeito de celebração: ${type} em (${x}, ${y}) - Total: ${particleCount + 12} partículas`);
     }
     
     // Efeito de sucção do fantasma para a proton pack
     showSuctionEffect(fromX, fromY, toX, toY) {
-        // Partículas de sucção MUITO mais intensas
-        for (let i = 0; i < this.config.suctionParticles * 4; i++) { // Quadruplicar partículas
+        // Partículas de sucção reduzidas
+        for (let i = 0; i < 15; i++) { // Reduzido drasticamente
             const particle = new SuctionParticle(fromX, fromY, toX, toY);
             this.particles.push(particle);
         }
         
-        // Múltiplas linhas de conexão energética
-        for (let i = 0; i < 3; i++) {
-            const connection = new EnergyConnection(
-                fromX + (Math.random() - 0.5) * 20,
-                fromY + (Math.random() - 0.5) * 20,
-                toX + (Math.random() - 0.5) * 20,
-                toY + (Math.random() - 0.5) * 20
-            );
-            this.effects.push(connection);
-        }
+        // Uma única linha de conexão energética
+        const connection = new EnergyConnection(fromX, fromY, toX, toY);
+        this.effects.push(connection);
         
-        // Partículas em espiral ao redor do ponto de origem
-        for (let i = 0; i < 60; i++) {
-            const angle = (i / 60) * Math.PI * 4; // Espiral dupla
-            const radius = 20 + (i / 60) * 50;
+        // Partículas em círculo simples
+        for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2;
+            const radius = 20 + Math.random() * 15;
             const px = fromX + Math.cos(angle) * radius;
             const py = fromY + Math.sin(angle) * radius;
             const particle = new SuctionParticle(px, py, toX, toY);
-            particle.speed *= 0.7 + (i / 60) * 0.6; // Velocidade variável
             this.particles.push(particle);
         }
         
-        // Partículas de borda do fantasma
-        for (let i = 0; i < 40; i++) {
-            const angle = (i / 40) * Math.PI * 2;
-            const radius = 40 + Math.random() * 20;
-            const px = fromX + Math.cos(angle) * radius;
-            const py = fromY + Math.sin(angle) * radius;
-            const particle = new SuctionParticle(px, py, toX, toY);
-            particle.color = '#00FFFF';
-            particle.size *= 1.5;
-            this.particles.push(particle);
-        }
-        
-        console.log(`🌪️ Efeito de sucção DRAMATIZADO de (${fromX}, ${fromY}) para (${toX}, ${toY}) com ${this.particles.length} partículas`);
+        console.log(`🌪️ Efeito de sucção: ${fromX}, ${fromY}) para (${toX}, ${toY}) - Total: 23 partículas`);
     }
     
     // Efeito do feixe de prótons
@@ -312,6 +281,23 @@ class VisualEffectsSystem {
         console.log(`❌ Efeito de falha em (${x}, ${y})`);
     }
     
+    // Limpar partículas mortas
+    cleanupParticles() {
+        const beforeCount = this.particles.length;
+        this.particles = this.particles.filter(particle => particle.life > 0.1);
+        const afterCount = this.particles.length;
+        
+        if (beforeCount !== afterCount) {
+            console.log(`🧹 Limpeza: ${beforeCount - afterCount} partículas removidas (${afterCount} restantes)`);
+        }
+        
+        // Forçar limpeza se ainda houver muitas partículas
+        if (this.particles.length > this.config.maxParticles) {
+            this.particles = this.particles.slice(-this.config.maxParticles);
+            console.log(`🧹 Forçando limpeza: limitado a ${this.config.maxParticles} partículas`);
+        }
+    }
+    
     // Limpar todos os efeitos
     clearAllEffects() {
         this.particles = [];
@@ -322,43 +308,41 @@ class VisualEffectsSystem {
     
     // Função de teste visual
     testVisualEffects() {
-        console.log('📝 TESTE VISUAL DE EFEITOS INICIADO');
+        console.log('📝 TESTE VISUAL OTIMIZADO');
         console.log('Sistema inicializado:', this.isInitialized);
-        console.log('Canvas:', this.canvas);
-        console.log('Context:', this.ctx);
-        console.log('Dimensões:', this.canvas?.width, 'x', this.canvas?.height);
         
         if (!this.isInitialized) {
             console.error('❌ Sistema não inicializado!');
             return;
         }
         
-        // Teste 1: Desenhar retângulo vermelho
-        this.ctx.fillStyle = 'red';
-        this.ctx.fillRect(100, 100, 100, 100);
-        console.log('🔴 Retângulo vermelho desenhado');
+        // Limpar efeitos anteriores
+        this.clearAllEffects();
         
-        // Teste 2: Celebração no centro
-        setTimeout(() => {
-            this.showCelebrationEffect(window.innerWidth / 2, window.innerHeight / 2, 'ghost_captured');
-            console.log('🎉 Celebração ativada');
-        }, 1000);
+        // Teste 1: Celebração pequena
+        this.showCelebrationEffect(window.innerWidth / 2, window.innerHeight / 2, 'ghost_captured');
+        console.log('🎉 Teste: Celebração ativada');
         
-        // Teste 3: Feixe de prótons
+        // Teste 2: Feixe por 2 segundos
         setTimeout(() => {
             this.startProtonBeamEffect();
-            console.log('⚡ Feixe de prótons ativado');
-        }, 2000);
+            console.log('⚡ Teste: Feixe ativado');
+            
+            setTimeout(() => {
+                this.stopProtonBeamEffect();
+                console.log('⚡ Teste: Feixe parado');
+            }, 2000);
+        }, 1000);
         
-        // Teste 4: Sucção
+        // Teste 3: Sucção pequena
         setTimeout(() => {
             this.showSuctionEffect(
-                window.innerWidth / 2 - 100, 
-                window.innerHeight / 2 - 100,
-                window.innerWidth / 2 + 100, 
-                window.innerHeight / 2 + 100
+                window.innerWidth / 2 - 50, 
+                window.innerHeight / 2 - 50,
+                window.innerWidth / 2 + 50, 
+                window.innerHeight / 2 + 50
             );
-            console.log('🌪️ Sucção ativada');
+            console.log('🌪️ Teste: Sucção ativada');
         }, 3000);
     }
     
@@ -418,28 +402,28 @@ class Particle {
 class CelebrationParticle extends Particle {
     constructor(x, y, colors) {
         super(x, y);
-        this.vx = (Math.random() - 0.5) * 12; // Velocidade mais alta
-        this.vy = (Math.random() - 0.5) * 12 - 3;
-        this.gravity = 0.08;
-        this.life = 3.0 + Math.random() * 2; // Vida mais longa
+        this.vx = (Math.random() - 0.5) * 8; // Velocidade reduzida
+        this.vy = (Math.random() - 0.5) * 8 - 2;
+        this.gravity = 0.12; // Mais gravidade
+        this.life = 1.5 + Math.random(); // Vida mais curta
         this.maxLife = this.life;
-        this.size = 4 + Math.random() * 8; // Partículas maiores
+        this.size = 3 + Math.random() * 4; // Tamanho reduzido
         this.color = colors[Math.floor(Math.random() * colors.length)];
-        this.spin = Math.random() * 0.3;
+        this.spin = Math.random() * 0.2;
         this.angle = 0;
-        this.glow = 20 + Math.random() * 20; // Muito brilho
-        this.sparkle = Math.random() < 0.3; // 30% são estrelas
+        this.glow = 10 + Math.random() * 10; // Menos brilho
+        this.sparkle = Math.random() < 0.2; // Menos estrelas
     }
     
     update() {
         super.update();
         this.vy += this.gravity;
         this.angle += this.spin;
-        this.size *= 0.995; // Diminui mais devagar
+        this.size *= 0.99; // Diminui mais rápido
         
         // Efeito de cintilação
-        if (this.sparkle && Math.random() < 0.1) {
-            this.size *= 1.5;
+        if (this.sparkle && Math.random() < 0.05) {
+            this.size *= 1.2;
         }
     }
     
@@ -453,7 +437,7 @@ class CelebrationParticle extends Particle {
         ctx.rotate(this.angle);
         
         if (this.sparkle) {
-            // Desenhar estrela
+            // Desenhar estrela simples
             ctx.beginPath();
             for (let i = 0; i < 5; i++) {
                 const angle = (i * 144) * Math.PI / 180;
@@ -468,8 +452,10 @@ class CelebrationParticle extends Particle {
             ctx.closePath();
             ctx.fill();
         } else {
-            // Desenhar retângulo brilhante
-            ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+            // Desenhar círculo simples
+            ctx.beginPath();
+            ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+            ctx.fill();
         }
         
         ctx.restore();
@@ -726,20 +712,25 @@ class ProtonBeamEffect {
     }
     
     update() {
-        // Adicionar partículas do feixe mais frequentemente
+        // Adicionar partículas do feixe com menor frequência
         this.particleTimer++;
-        if (this.particleTimer % 2 === 0) { // A cada 2 frames
-            for (let i = 0; i < 8; i++) { // Mais partículas
+        if (this.particleTimer % 6 === 0) { // A cada 6 frames (reduzido)
+            for (let i = 0; i < 3; i++) { // Menos partículas
                 const particle = new ProtonParticle();
                 this.particles.push(particle);
             }
         }
         
-        // Atualizar partículas existentes
+        // Atualizar partículas existentes e limpar as mortas
         this.particles = this.particles.filter(p => {
             p.update();
-            return p.life > 0;
+            return p.life > 0.05; // Threshold mais alto
         });
+        
+        // Limitar número de partículas do feixe
+        if (this.particles.length > 20) {
+            this.particles = this.particles.slice(-20); // Manter apenas 20
+        }
     }
     
     render(ctx) {
