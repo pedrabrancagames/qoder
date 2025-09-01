@@ -107,7 +107,15 @@ class VisualEffectsSystem {
         this.canvas.style.zIndex = '9999';
         this.canvas.style.background = 'transparent';
         
-        document.body.appendChild(this.canvas);
+        const uiContainer = document.getElementById('ui-container');
+        if (uiContainer) {
+            uiContainer.appendChild(this.canvas);
+            console.log('🖼️ Canvas anexado ao #ui-container');
+        } else {
+            console.error('❌ #ui-container não encontrado! Anexando ao body como fallback.');
+            document.body.appendChild(this.canvas);
+        }
+
         this.ctx = this.canvas.getContext('2d');
         
         console.log('🖼️ Canvas criado com sucesso:', {
