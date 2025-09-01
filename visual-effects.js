@@ -428,6 +428,17 @@ class VisualEffectsSystem {
             }
         }
         
+        // Feedback visual imediato
+        console.log('🎨 Feedback visual: Teste iniciado');
+        if (this.canvas && this.ctx) {
+            // Flash branco rápido para indicar que o teste começou
+            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            this.ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+            setTimeout(() => {
+                this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+            }, 100);
+        }
+        
         // Limpar efeitos anteriores
         this.clearAllEffects();
         

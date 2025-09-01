@@ -179,6 +179,19 @@ AFRAME.registerComponent('game-manager', {
                         this.createTestButtonFallback();
                     }
                 }
+                
+                // Forçar visibilidade de ambos os botões
+                if (testButton) {
+                    testButton.style.visibility = 'visible';
+                    testButton.style.display = 'block';
+                    console.log('✅ Botão principal forçado a ser visível');
+                }
+                
+                if (fallbackButton) {
+                    fallbackButton.style.visibility = 'visible';
+                    fallbackButton.style.display = 'block';
+                    console.log('✅ Botão fallback forçado a ser visível');
+                }
             }, 1000);
         });
         
@@ -255,7 +268,7 @@ AFRAME.registerComponent('game-manager', {
         button.innerHTML = '🎨 TESTE VISUAL';
         button.style.cssText = `
             position: fixed !important;
-            top: 90px !important;
+            top: 100px !important;
             left: 20px !important;
             z-index: 25000 !important;
             background: linear-gradient(45deg, #ff0000, #ff4444) !important;
@@ -289,6 +302,17 @@ AFRAME.registerComponent('game-manager', {
             button.style.boxShadow = '0 8px 30px rgba(255,0,0,0.9), inset 0 2px 5px rgba(255,255,255,0.3) !important';
         });
         
+        // Feedback visual de clique
+        button.addEventListener('mousedown', () => {
+            button.style.transform = 'scale(0.95) !important';
+            button.style.boxShadow = '0 4px 20px rgba(255,0,0,0.7), inset 0 2px 5px rgba(255,255,255,0.2) !important';
+        });
+        
+        button.addEventListener('mouseup', () => {
+            button.style.transform = 'scale(1) !important';
+            button.style.boxShadow = '0 8px 30px rgba(255,0,0,0.9), inset 0 2px 5px rgba(255,255,255,0.3) !important';
+        });
+        
         // Múltiplos event listeners com proteção
         const handleClick = (e) => {
             e.preventDefault();
@@ -297,11 +321,16 @@ AFRAME.registerComponent('game-manager', {
             
             console.log('🔴 FALLBACK BUTTON ATIVADO!', e.type);
             
-            // Feedback visual
-            button.style.transform = 'scale(0.95) !important';
+            // Feedback visual mais claro
+            button.style.transform = 'scale(0.9) !important';
+            button.style.boxShadow = '0 2px 15px rgba(255,0,0,0.5), inset 0 1px 3px rgba(255,255,255,0.1) !important';
+            button.style.backgroundColor = '#cc0000 !important';
+            
             setTimeout(() => {
                 button.style.transform = 'scale(1) !important';
-            }, 150);
+                button.style.boxShadow = '0 8px 30px rgba(255,0,0,0.9), inset 0 2px 5px rgba(255,255,255,0.3) !important';
+                button.style.backgroundColor = 'linear-gradient(45deg, #ff0000, #ff4444) !important';
+            }, 200);
             
             this.handleTestButtonClick(e);
         };
