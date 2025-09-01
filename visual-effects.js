@@ -33,11 +33,27 @@ class VisualEffectsSystem {
     }
     
     init() {
+        // Verificação robusta do ambiente
         if (!document.body) {
             console.warn('⚠️ document.body não disponível, tentando novamente em 200ms...');
             setTimeout(() => this.init(), 200);
             return;
         }
+        
+        // Verificação extra para contexto AR
+        const isInAR = document.querySelector('a-scene')?.is('ar-mode') || 
+                      document.querySelector('a-scene')?.is('vr-mode');
+        
+        if (isInAR) {
+            console.log('📱 Contexto AR detectado, ajustando inicialização...');
+            // Pequeno delay para garantir que o contexto AR esteja totalmente carregado
+            setTimeout(() => this._initInternal(), 300);
+        } else {
+            this._initInternal();
+        }
+    }
+    
+    _initInternal() {
         
         try {
             this.createCanvas();
@@ -51,6 +67,17 @@ class VisualEffectsSystem {
             }, 3000); // A cada 3 segundos
             
             console.log('🎨 Sistema de Efeitos Visuais inicializado com sucesso');
+            
+            // Verificação pós-inicialização
+            setTimeout(() => {
+                if (this.canvas && this.ctx) {
+                    console.log('✅ Sistema de efeitos totalmente operacional');
+                    // Forçar um redraw para garantir visibilidade
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                } else {
+                    console.error('❌ Problema na inicialização do canvas');
+                }
+            }, 500);
         } catch (error) {
             console.error('❌ Erro ao inicializar Sistema de Efeitos Visuais:', error);
             // Tentar novamente em 500ms
@@ -359,9 +386,46 @@ class VisualEffectsSystem {
         console.log('Dimensões canvas:', this.canvas?.width, 'x', this.canvas?.height);
         console.log('Dimensões tela:', window.innerWidth, 'x', window.innerHeight);
         
-        if (!this.isInitialized) {
-            console.error('❌ Sistema não inicializado!');
+        // Verificação robusta do sistema
+        if (!this.isInitialized || !this.canvas || !this.ctx) {
+            console.error('❌ Sistema não inicializado corretamente!');
+            
+            // Tentativa de re-inicialização
+            if (!this.isInitialized) {
+                console.log('🔄 Tentando re-inicializar sistema...');
+                this.init();
+                setTimeout(() => {
+                    if (this.isInitialized) {
+                        console.log('✅ Re-inicialização bem-sucedida, tentando teste novamente...');
+                        this._executeTest();
+                    } else {
+                        console.error('❌ Falha na re-inicialização');
+                        alert('Sistema de efeitos visuais não está inicializado. Verifique o console.');
+                    }
+                }, 1000);
+                return;
+            }
+            
+            alert('Sistema de efeitos visuais não está inicializado. Verifique o console.');
             return;
+        }
+        
+        this._executeTest();
+    }
+    
+    _executeTest() {
+        // Verificação extra para contexto AR
+        const scene = document.querySelector('a-scene');
+        const isInAR = scene?.is('ar-mode') || scene?.is('vr-mode');
+        
+        if (isInAR) {
+            console.log('📱 Contexto AR detectado durante teste');
+            // Forçar visibilidade do canvas
+            if (this.canvas) {
+                this.canvas.style.visibility = 'visible';
+                this.canvas.style.opacity = '1';
+                console.log('✅ Canvas forçado a ser visível');
+            }
         }
         
         // Limpar efeitos anteriores

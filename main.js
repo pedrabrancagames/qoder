@@ -157,7 +157,30 @@ AFRAME.registerComponent('game-manager', {
         this.protonPackIcon.addEventListener('touchend', this.cancelCapture);
         this.protonPackIcon.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); });
         this.notificationCloseButton.addEventListener('click', this.hideNotification);
-        this.el.sceneEl.addEventListener('enter-vr', this.initGame);
+        this.el.sceneEl.addEventListener('enter-vr', () => {
+            this.initGame();
+            
+            // Verificação extra do botão de teste após entrar no AR
+            setTimeout(() => {
+                console.log('🔍 Verificação pós-AR ativada');
+                
+                // Forçar recriação do botão de teste se necessário
+                const testButton = document.getElementById('test-effects-button');
+                const fallbackButton = document.getElementById('test-effects-fallback');
+                
+                if (!testButton && !fallbackButton) {
+                    console.warn('⚠️ Nenhum botão de teste encontrado após AR, criando fallback...');
+                    this.createTestButtonFallback();
+                } else if (testButton) {
+                    // Reaplicar listeners se necessário
+                    const rect = testButton.getBoundingClientRect();
+                    if (rect.width === 0 || rect.height === 0) {
+                        console.warn('⚠️ Botão de teste com tamanho zero após AR, criando fallback...');
+                        this.createTestButtonFallback();
+                    }
+                }
+            }, 1000);
+        });
         
         // Event listener para botão de teste - MELHORADO
         console.log('🔴 Verificando botão de teste:', this.testEffectsButton);
@@ -219,7 +242,7 @@ AFRAME.registerComponent('game-manager', {
     },
 
     createTestButtonFallback: function() {
-        console.log('🔴 Criando botão de teste manual ROBUSTO');
+        console.log('🔴 Criando botão de teste manual OTIMIZADO');
         
         // Remover botão fallback anterior se existir
         const existing = document.getElementById('test-effects-fallback');
@@ -229,59 +252,114 @@ AFRAME.registerComponent('game-manager', {
         
         const button = document.createElement('button');
         button.id = 'test-effects-fallback';
-        button.textContent = 'TESTE VISUAL';
+        button.innerHTML = '🎨 TESTE VISUAL';
         button.style.cssText = `
             position: fixed !important;
-            top: 70px !important;
-            right: 20px !important;
-            z-index: 15000 !important;
-            background: #ff0000 !important;
+            top: 90px !important;
+            left: 20px !important;
+            z-index: 25000 !important;
+            background: linear-gradient(45deg, #ff0000, #ff4444) !important;
             color: white !important;
-            padding: 15px 20px !important;
-            border: 3px solid #ffffff !important;
-            border-radius: 10px !important;
+            padding: 18px 25px !important;
+            border: 4px solid #ffffff !important;
+            border-radius: 15px !important;
             cursor: pointer !important;
-            font-size: 16px !important;
+            font-size: 18px !important;
             font-weight: bold !important;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.8) !important;
-            width: 120px !important;
-            height: 50px !important;
+            box-shadow: 0 8px 30px rgba(255,0,0,0.9), inset 0 2px 5px rgba(255,255,255,0.3) !important;
+            width: 140px !important;
+            height: 60px !important;
             display: block !important;
             visibility: visible !important;
             opacity: 1 !important;
             pointer-events: auto !important;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8) !important;
+            transform: none !important;
+            transition: all 0.2s ease !important;
         `;
         
-        // Múltiplos event listeners para garantir funcionamento
-        button.addEventListener('click', (e) => {
-            console.log('🔴 FALLBACK BUTTON CLICKED!');
-            this.handleTestButtonClick(e);
+        // Efeito hover/active
+        button.addEventListener('mouseenter', () => {
+            button.style.transform = 'scale(1.05) !important';
+            button.style.boxShadow = '0 10px 35px rgba(255,0,0,1), inset 0 2px 5px rgba(255,255,255,0.4) !important';
         });
         
-        button.addEventListener('touchstart', (e) => {
-            console.log('🔴 FALLBACK BUTTON TOUCHED!');
-            this.handleTestButtonClick(e);
+        button.addEventListener('mouseleave', () => {
+            button.style.transform = 'scale(1) !important';
+            button.style.boxShadow = '0 8px 30px rgba(255,0,0,0.9), inset 0 2px 5px rgba(255,255,255,0.3) !important';
         });
         
-        button.addEventListener('mousedown', (e) => {
-            console.log('🔴 FALLBACK BUTTON PRESSED!');
+        // Múltiplos event listeners com proteção
+        const handleClick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            
+            console.log('🔴 FALLBACK BUTTON ATIVADO!', e.type);
+            
+            // Feedback visual
+            button.style.transform = 'scale(0.95) !important';
+            setTimeout(() => {
+                button.style.transform = 'scale(1) !important';
+            }, 150);
+            
             this.handleTestButtonClick(e);
-        });
+        };
         
-        // Adicionar ao body com alta prioridade
+        button.addEventListener('click', handleClick, { capture: true });
+        button.addEventListener('touchstart', handleClick, { capture: true });
+        button.addEventListener('mousedown', handleClick, { capture: true });
+        
+        // Adicionar ao body com máxima prioridade
         document.body.appendChild(button);
+        
+        // Proteção extra: garantir que o botão não seja bloqueado
+        setTimeout(() => {
+            const rect = button.getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0) {
+                // Forçar visibilidade e interatividade
+                button.style.pointerEvents = 'auto !important';
+                button.style.visibility = 'visible !important';
+                button.style.display = 'block !important';
+                
+                // Verificar se há elementos sobrepostos
+                const elementsAtPoint = document.elementsFromPoint(rect.left + rect.width/2, rect.top + rect.height/2);
+                if (elementsAtPoint.length > 1 && elementsAtPoint[0] !== button) {
+                    console.warn('⚠️ Elementos sobrepostos detectados:', elementsAtPoint);
+                    // Forçar z-index ainda maior
+                    button.style.zIndex = '30000 !important';
+                }
+                
+                console.log('✅ Botão fallback totalmente protegido');
+            } else {
+                console.error('❌ Botão fallback com problema de tamanho após adição');
+            }
+        }, 300);
+        
+        // Forçar reflow
+        button.offsetHeight;
         
         // Verificar se foi criado corretamente
         setTimeout(() => {
             const rect = button.getBoundingClientRect();
-            console.log('🔴 Botão fallback criado:', {
+            console.log('🔴 Botão fallback otimizado criado:', {
                 width: rect.width,
                 height: rect.height,
-                visible: button.offsetWidth > 0 && button.offsetHeight > 0
+                top: rect.top,
+                left: rect.left,
+                visible: button.offsetWidth > 0 && button.offsetHeight > 0,
+                zIndex: getComputedStyle(button).zIndex
             });
-        }, 100);
+            
+            // Teste de clique programático
+            if (rect.width > 0 && rect.height > 0) {
+                console.log('✅ Botão fallback criado com sucesso e pronto para uso');
+            } else {
+                console.error('❌ Botão fallback com problema de tamanho');
+            }
+        }, 200);
         
-        console.log('🔴 Botão fallback adicionado ao DOM');
+        console.log('🔴 Botão fallback OTIMIZADO adicionado ao DOM');
     },
 
     hideNotification: function () {
