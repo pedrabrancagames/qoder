@@ -331,14 +331,14 @@ class VisualEffectsSystem {
         const targetY = window.innerHeight / 2;
 
         // Cria a conexão energética (o raio 1)
-        const connection1 = new EnergyConnection(startX, startY, targetX, targetY, '#FFA500', 'proton_beam');
+        const connection1 = new EnergyConnection(startX, startY, targetX, targetY, '#FFA500', 'proton_beam', true);
         this.effects.push(connection1);
 
         // Cria a segunda conexão energética (o raio 2)
-        const connection2 = new EnergyConnection(startX + 5, startY + 5, targetX, targetY, '#FFFFFF', 'proton_beam');
+        const connection2 = new EnergyConnection(startX + 5, startY + 5, targetX, targetY, '#F42B3D', 'proton_beam', true);
         this.effects.push(connection2);
 
-        console.log('⚡ Feixe de prótons criado com 2 raios - total de efeitos:', this.effects.length);
+        console.log('⚡ Feixe de prótons criado com 2 raios contínuos - total de efeitos:', this.effects.length);
     }
     
     stopProtonBeamEffect() {
@@ -824,7 +824,7 @@ class ExplosionEffect {
 
 // Efeito de conexão energética
 class EnergyConnection {
-    constructor(fromX, fromY, toX, toY, color = '#00FFFF', type = 'energy_connection') {
+    constructor(fromX, fromY, toX, toY, color = '#00FFFF', type = 'energy_connection', isPermanent = false) {
         this.fromX = fromX;
         this.fromY = fromY;
         this.toX = toX;
@@ -834,6 +834,7 @@ class EnergyConnection {
         this.lightning = [];
         this.color = color;
         this.type = type;
+        this.isPermanent = isPermanent;
         this.generateLightning();
     }
     
@@ -854,9 +855,11 @@ class EnergyConnection {
     }
     
     update() {
-        this.life -= 0.05;
-        if (this.life <= 0) {
-            this.active = false;
+        if (!this.isPermanent) {
+            this.life -= 0.05;
+            if (this.life <= 0) {
+                this.active = false;
+            }
         }
         
         // Regenerar raio ocasionalmente
