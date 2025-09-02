@@ -287,7 +287,7 @@ class VisualEffectsSystem {
         }
         
         // Uma única linha de conexão energética
-        const connection = new EnergyConnection(fromX, fromY, toX, toY);
+        const connection = new EnergyConnection(fromX, fromY, toX, toY, '#00FFFF', 'suction_connection');
         this.effects.push(connection);
         
         // Partículas em círculo simples
@@ -316,11 +316,29 @@ class VisualEffectsSystem {
         // Remove feixe anterior se existir
         this.stopProtonBeamEffect();
         
-        // Cria novo feixe
+        // Cria novo feixe de partículas
         const beam = new ProtonBeamEffect();
         this.effects.push(beam);
+
+        // Coordenadas de início e fim
+        const protonPackIcon = document.getElementById('proton-pack-icon');
+        let startX = window.innerWidth - 70;
+        let startY = window.innerHeight - 70;
+
+        if (protonPackIcon) {
+            const rect = protonPackIcon.getBoundingClientRect();
+            startX = (rect.left + rect.width / 2) - 50;
+            startY = rect.top - 10;
+        }
+
+        const targetX = window.innerWidth / 2;
+        const targetY = window.innerHeight / 2;
+
+        // Cria a conexão energética (o raio)
+        const connection = new EnergyConnection(startX, startY, targetX, targetY, '#FFA500', 'proton_beam');
+        this.effects.push(connection);
         
-        console.log('⚡ Feixe de prótons criado - total de efeitos:', this.effects.length);
+        console.log('⚡ Feixe de prótons criado com raio e partículas - total de efeitos:', this.effects.length);
     }
     
     stopProtonBeamEffect() {
@@ -806,7 +824,7 @@ class ExplosionEffect {
 
 // Efeito de conexão energética
 class EnergyConnection {
-    constructor(fromX, fromY, toX, toY) {
+    constructor(fromX, fromY, toX, toY, color = '#00FFFF', type = 'energy_connection') {
         this.fromX = fromX;
         this.fromY = fromY;
         this.toX = toX;
@@ -814,6 +832,8 @@ class EnergyConnection {
         this.life = 1.0;
         this.active = true;
         this.lightning = [];
+        this.color = color;
+        this.type = type;
         this.generateLightning();
     }
     
@@ -848,9 +868,9 @@ class EnergyConnection {
     render(ctx) {
         ctx.save();
         ctx.globalAlpha = this.life;
-        ctx.strokeStyle = '#00FFFF';
+        ctx.strokeStyle = this.color;
         ctx.lineWidth = 3;
-        ctx.shadowColor = '#00FFFF';
+        ctx.shadowColor = this.color;
         ctx.shadowBlur = 10;
         
         ctx.beginPath();
