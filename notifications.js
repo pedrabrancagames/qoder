@@ -289,16 +289,16 @@ class NotificationSystem {
     
     // Notificações específicas do Ghostbusters
     ghostCaptured(ghostType = 'fantasma', points = 10) {
-        return this.show(
-            `${ghostType} capturado! +${points} pontos`,
-            'ghostbusters',
-            {
-                icon: '👻',
-                title: 'Fantasma Capturado!',
-                duration: 3000,
-                pulse: true
-            }
-        );
+        // return this.show(
+        //     `${ghostType} capturado! +${points} pontos`,
+        //     'ghostbusters',
+        //     {
+        //         icon: '👻',
+        //         title: 'Fantasma Capturado!',
+        //         duration: 3000,
+        //         pulse: true
+        //     }
+        // );
     }
     
     inventoryFull() {
