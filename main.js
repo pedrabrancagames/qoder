@@ -623,7 +623,6 @@ AFRAME.registerComponent('game-manager', {
         this.userStats.captures += 1;
         this.updateInventoryUI();
 
-        let captureMessage = `Fantasma capturado! Você agora tem ${this.userStats.points} pontos.`;
 
         if (this.inventory.length === this.INVENTORY_LIMIT) {
             this.inventoryFullSound.play(); // Som de inventário cheio
@@ -653,13 +652,11 @@ AFRAME.registerComponent('game-manager', {
                 window.notificationSystem.ecto1Unlocked();
             }
             
-            captureMessage += "\n\nVocê ouve um barulho de motor familiar... Algo especial apareceu no mapa!";
         }
 
         const userRef = ref(this.database, 'users/' + this.currentUser.uid);
         update(userRef, { points: this.userStats.points, captures: this.userStats.captures, inventory: this.inventory, ecto1Unlocked: this.userStats.ecto1Unlocked });
 
-        this.showNotification(captureMessage);
         this.generateGhost();
     },
 
