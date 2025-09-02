@@ -306,19 +306,15 @@ class VisualEffectsSystem {
     // Efeito do feixe de prótons
     startProtonBeamEffect() {
         console.log('⚡ Iniciando feixe de prótons - sistema inicializado:', this.isInitialized);
-        
+
         if (!this.isInitialized) {
             console.warn('⚠️ Sistema não inicializado, tentando novamente em 500ms...');
             setTimeout(() => this.startProtonBeamEffect(), 500);
             return;
         }
-        
+
         // Remove feixe anterior se existir
         this.stopProtonBeamEffect();
-        
-        // Cria novo feixe de partículas
-        const beam = new ProtonBeamEffect();
-        this.effects.push(beam);
 
         // Coordenadas de início e fim
         const protonPackIcon = document.getElementById('proton-pack-icon');
@@ -334,11 +330,15 @@ class VisualEffectsSystem {
         const targetX = window.innerWidth / 2;
         const targetY = window.innerHeight / 2;
 
-        // Cria a conexão energética (o raio)
-        const connection = new EnergyConnection(startX, startY, targetX, targetY, '#FFA500', 'proton_beam');
-        this.effects.push(connection);
-        
-        console.log('⚡ Feixe de prótons criado com raio e partículas - total de efeitos:', this.effects.length);
+        // Cria a conexão energética (o raio 1)
+        const connection1 = new EnergyConnection(startX, startY, targetX, targetY, '#FFA500', 'proton_beam');
+        this.effects.push(connection1);
+
+        // Cria a segunda conexão energética (o raio 2)
+        const connection2 = new EnergyConnection(startX + 5, startY + 5, targetX, targetY, '#FFFFFF', 'proton_beam');
+        this.effects.push(connection2);
+
+        console.log('⚡ Feixe de prótons criado com 2 raios - total de efeitos:', this.effects.length);
     }
     
     stopProtonBeamEffect() {
@@ -887,140 +887,7 @@ class EnergyConnection {
     }
 }
 
-// Efeito do feixe de prótons (Refatorado)
-class ProtonBeamEffect {
-    constructor() {
-        this.type = 'proton_beam';
-        this.active = true;
-        this.particleTimer = 0;
-        this.particles = []; // Partículas gerenciadas dentro do efeito
-    }
 
-    update() {
-        // Adicionar um fluxo constante de partículas
-        this.particleTimer++;
-        if (this.particleTimer % 2 === 0) { // A cada 2 frames para um fluxo denso
-            for (let i = 0; i < 8; i++) { // Mais partículas por vez
-                const particle = new ProtonParticle();
-                this.particles.push(particle);
-            }
-        }
-
-        // Atualizar e limpar partículas internas
-        this.particles = this.particles.filter(p => {
-            p.update();
-            return p.life > 0;
-        });
-    }
-
-    render(ctx) {
-        // O "efeito" agora é apenas renderizar suas próprias partículas
-        this.particles.forEach(p => p.render(ctx));
-    }
-}
-
-// Partícula do feixe de prótons (Refatorada para se assemelhar à sucção)
-class ProtonParticle extends Particle {
-    constructor() {
-        const protonPackIcon = document.getElementById('proton-pack-icon');
-        let startX = window.innerWidth - 70;
-        let startY = window.innerHeight - 70;
-
-        if (protonPackIcon) {
-            const rect = protonPackIcon.getBoundingClientRect();
-            startX = (rect.left + rect.width / 2) - 50; // Ajustado para a esquerda
-            startY = rect.top - 10; // Ajustado para baixo
-        }
-
-        const targetX = window.innerWidth / 2;
-        const targetY = window.innerHeight / 2;
-
-        super(startX, startY);
-        this.startX = startX;
-        this.startY = startY;
-        this.targetX = targetX + (Math.random() - 0.5) * 50; // Pequena variação no alvo
-        this.targetY = targetY + (Math.random() - 0.5) * 50;
-        this.progress = 0;
-        this.speed = 0.015 + Math.random() * 0.025; // Velocidade mais variada
-        this.life = 1.0;
-        this.maxLife = 1.0;
-        this.size = 2 + Math.random() * 5; // Partículas maiores
-        this.color = ['#FFA500', '#FF6347', '#00BFFF', '#1E90FF', '#FFFFFF'][Math.floor(Math.random() * 5)];
-        this.trail = [];
-        this.glow = 15 + Math.random() * 15;
-        this.curve = (Math.random() - 0.5) * 60; // Curva mais pronunciada
-    }
-    
-    update() {
-        this.progress += this.speed;
-        
-        // Movimento suave com curva mais dramática
-        const curve = Math.sin(this.progress * Math.PI) * this.curve;
-        const easeProgress = this.easeInOut(this.progress);
-        
-        this.x = this.startX + (this.targetX - this.startX) * easeProgress;
-        this.y = this.startY + (this.targetY - this.startY) * easeProgress + curve;
-        
-        // Adicionar à trilha
-        this.trail.push({ x: this.x, y: this.y, alpha: this.alpha });
-        if (this.trail.length > 15) { // Trilha mais longa
-            this.trail.shift();
-        }
-        
-        // Acelerar conforme se aproxima do alvo
-        this.speed *= 1.02;
-        
-        if (this.progress >= 1.0) {
-            this.life = 0;
-        }
-    }
-    
-    easeInOut(t) {
-        return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-    }
-    
-    render(ctx) {
-        // Renderizar trilha com gradiente
-        ctx.save();
-        ctx.strokeStyle = this.color;
-        ctx.lineWidth = 2;
-        ctx.shadowColor = this.color;
-        ctx.shadowBlur = this.glow * 0.5;
-        
-        ctx.beginPath();
-        this.trail.forEach((point, index) => {
-            const alpha = (index / this.trail.length) * 0.6;
-            ctx.globalAlpha = alpha;
-            if (index === 0) {
-                ctx.moveTo(point.x, point.y);
-            } else {
-                ctx.lineTo(point.x, point.y);
-            }
-        });
-        ctx.stroke();
-        ctx.restore();
-        
-        // Renderizar partícula principal com brilho
-        ctx.save();
-        ctx.globalAlpha = this.alpha;
-        ctx.fillStyle = this.color;
-        ctx.shadowColor = this.color;
-        ctx.shadowBlur = this.glow;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Anel externo
-        ctx.globalAlpha = this.alpha * 0.3;
-        ctx.strokeStyle = this.color;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size * 2, 0, Math.PI * 2);
-        ctx.stroke();
-        
-        ctx.restore();
-    }
-}
 
 // Efeito de X vermelho para falhas
 class FailureXEffect {
