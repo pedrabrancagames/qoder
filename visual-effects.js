@@ -914,61 +914,62 @@ class ProtonParticle extends Particle {
 
         const targetX = window.innerWidth / 2;
         const targetY = window.innerHeight / 2;
-        
-        super(startX, startY);
 
+        super(startX, startY);
         this.startX = startX;
         this.startY = startY;
         this.targetX = targetX + (Math.random() - 0.5) * 50; // Pequena variação no alvo
         this.targetY = targetY + (Math.random() - 0.5) * 50;
-
         this.progress = 0;
-        this.speed = 0.02 + Math.random() * 0.03; // Velocidade mais rápida
+        this.speed = 0.015 + Math.random() * 0.025; // Velocidade mais variada
         this.life = 1.0;
         this.maxLife = 1.0;
-        this.size = 1 + Math.random() * 4;
+        this.size = 2 + Math.random() * 5; // Partículas maiores
         this.color = ['#FFA500', '#FF6347', '#00BFFF', '#1E90FF', '#FFFFFF'][Math.floor(Math.random() * 5)];
         this.trail = [];
-        this.glow = 10 + Math.random() * 10;
-        this.curve = (Math.random() - 0.5) * 40;
+        this.glow = 15 + Math.random() * 15;
+        this.curve = (Math.random() - 0.5) * 60; // Curva mais pronunciada
     }
-
+    
     update() {
         this.progress += this.speed;
         
+        // Movimento suave com curva mais dramática
         const curve = Math.sin(this.progress * Math.PI) * this.curve;
         const easeProgress = this.easeInOut(this.progress);
         
-        this.x = this.startX + (this.targetX - this.startX) * easeProgress + curve;
-        this.y = this.startY + (this.targetY - this.startY) * easeProgress;
-
+        this.x = this.startX + (this.targetX - this.startX) * easeProgress;
+        this.y = this.startY + (this.targetY - this.startY) * easeProgress + curve;
+        
+        // Adicionar à trilha
         this.trail.push({ x: this.x, y: this.y, alpha: this.alpha });
-        if (this.trail.length > 10) { // Trilha mais curta que a sucção
+        if (this.trail.length > 15) { // Trilha mais longa
             this.trail.shift();
         }
         
-        this.speed *= 1.01; // Leve aceleração
+        // Acelerar conforme se aproxima do alvo
+        this.speed *= 1.02;
         
         if (this.progress >= 1.0) {
             this.life = 0;
         }
     }
-
+    
     easeInOut(t) {
-        return t * t; // Ease-in
+        return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
     }
-
+    
     render(ctx) {
-        // Renderizar trilha
+        // Renderizar trilha com gradiente
         ctx.save();
         ctx.strokeStyle = this.color;
-        ctx.lineWidth = this.size / 2;
+        ctx.lineWidth = 2;
         ctx.shadowColor = this.color;
-        ctx.shadowBlur = this.glow;
+        ctx.shadowBlur = this.glow * 0.5;
         
         ctx.beginPath();
         this.trail.forEach((point, index) => {
-            const alpha = (index / this.trail.length) * 0.5;
+            const alpha = (index / this.trail.length) * 0.6;
             ctx.globalAlpha = alpha;
             if (index === 0) {
                 ctx.moveTo(point.x, point.y);
@@ -979,7 +980,7 @@ class ProtonParticle extends Particle {
         ctx.stroke();
         ctx.restore();
         
-        // Renderizar partícula principal
+        // Renderizar partícula principal com brilho
         ctx.save();
         ctx.globalAlpha = this.alpha;
         ctx.fillStyle = this.color;
@@ -988,6 +989,15 @@ class ProtonParticle extends Particle {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fill();
+        
+        // Anel externo
+        ctx.globalAlpha = this.alpha * 0.3;
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size * 2, 0, Math.PI * 2);
+        ctx.stroke();
+        
         ctx.restore();
     }
 }
